@@ -8,7 +8,7 @@ import pytest
 from lifeexe.core import migrations
 from lifeexe.core.ratelimit import RateLimiter
 from lifeexe.core.security import hash_password, hash_token, needs_rehash, verify_password
-from lifeexe.core.timeutil import is_valid_timezone, local_date
+from lifeexe.core.timeutil import is_valid_timezone, local_date, normalize_timezone
 from lifeexe.domain.achievements import AchievementStats, earned_keys
 from lifeexe.domain.analytics import (
     Rate,
@@ -48,6 +48,14 @@ def test_dst_fall_back_new_york() -> None:
 def test_naive_datetime_rejected() -> None:
     with pytest.raises(ValueError):
         local_date(datetime(2026, 1, 1), "UTC", 0)
+
+
+def test_legacy_timezone_aliases_normalize() -> None:
+    # Defect D-001: Chromium reports "Asia/Calcutta"; registration used to fail with 422.
+    assert normalize_timezone("Asia/Calcutta") == "Asia/Kolkata"
+    assert normalize_timezone("US/Pacific") == "America/Los_Angeles"
+    assert normalize_timezone("Asia/Kolkata") == "Asia/Kolkata"
+    assert normalize_timezone("Nope/Nowhere") is None
 
 
 def test_timezone_validation() -> None:

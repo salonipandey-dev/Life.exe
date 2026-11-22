@@ -72,7 +72,7 @@ def top_attribute_insight(xp_by_attribute: Mapping[str, int], period_label: str)
     label = top.replace("_", " ").title()
     return Insight(
         "top_attribute",
-        f"Most of your XP {period_label} went to {label} ({share}% of {total} XP).",
+        f"Most of your XP {period_label} went to {label} ({share}% of {total:,} XP).",
         {"attribute": top, "xp": amount, "total_xp": total, "percent": share},
     )
 

@@ -39,17 +39,55 @@ class FixedClock:
         self._now += timedelta(**kwargs)
 
 
-def is_valid_timezone(name: str) -> bool:
-    if name not in _TIMEZONES:
-        return False
-    try:
-        ZoneInfo(name)
-    except (ZoneInfoNotFoundError, ValueError):
-        return False
-    return True
-
-
 _TIMEZONES = frozenset(available_timezones())
+
+#: Legacy IANA names that browsers still report (e.g. Chromium returns
+#: "Asia/Calcutta" for India) mapped to their canonical zone. Some tz
+#: databases ship without these "backward" links, so we never rely on them.
+TIMEZONE_ALIASES: dict[str, str] = {
+    "Asia/Calcutta": "Asia/Kolkata",
+    "Asia/Katmandu": "Asia/Kathmandu",
+    "Asia/Saigon": "Asia/Ho_Chi_Minh",
+    "Asia/Rangoon": "Asia/Yangon",
+    "Asia/Dacca": "Asia/Dhaka",
+    "Asia/Thimbu": "Asia/Thimphu",
+    "Asia/Ulan_Bator": "Asia/Ulaanbaatar",
+    "Asia/Chongqing": "Asia/Shanghai",
+    "Asia/Istanbul": "Europe/Istanbul",
+    "Europe/Kiev": "Europe/Kyiv",
+    "America/Buenos_Aires": "America/Argentina/Buenos_Aires",
+    "America/Indianapolis": "America/Indiana/Indianapolis",
+    "America/Godthab": "America/Nuuk",
+    "Atlantic/Faeroe": "Atlantic/Faroe",
+    "Pacific/Truk": "Pacific/Chuuk",
+    "Pacific/Ponape": "Pacific/Pohnpei",
+    "US/Eastern": "America/New_York",
+    "US/Central": "America/Chicago",
+    "US/Mountain": "America/Denver",
+    "US/Pacific": "America/Los_Angeles",
+    "Etc/UTC": "UTC",
+    "Etc/Universal": "UTC",
+}
+
+
+def normalize_timezone(name: str) -> str | None:
+    """Canonical IANA name for ``name``, or None if it is not a known zone.
+
+    Only names in the installed zone list (or the alias table) are accepted,
+    so arbitrary strings can never reach the filesystem lookup in ZoneInfo.
+    """
+    candidate = TIMEZONE_ALIASES.get(name, name)
+    if candidate not in _TIMEZONES:
+        return None
+    try:
+        ZoneInfo(candidate)
+    except (ZoneInfoNotFoundError, ValueError):
+        return None
+    return candidate
+
+
+def is_valid_timezone(name: str) -> bool:
+    return normalize_timezone(name) is not None
 
 
 def local_date(instant: datetime, tz_name: str, day_start_hour: int) -> date:

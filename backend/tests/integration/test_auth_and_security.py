@@ -18,6 +18,14 @@ def test_register_sets_secure_session_cookie(app) -> None:  # type: ignore[no-un
     assert me["progress"]["level"] == 1 and me["title"] == "Novice"
 
 
+def test_register_accepts_legacy_browser_timezone(app) -> None:  # type: ignore[no-untyped-def]
+    c = new_client(app)
+    r = c.post("/api/v1/auth/register", json={"email": "tz@example.com", "password": PASSWORD,
+                                              "display_name": "T", "timezone": "Asia/Calcutta"})
+    assert r.status_code == 201
+    assert c.get("/api/v1/profile").json()["timezone"] == "Asia/Kolkata"
+
+
 def test_duplicate_email_conflict(client: TestClient, app) -> None:  # type: ignore[no-untyped-def]
     r = new_client(app).post("/api/v1/auth/register", json={"email": "SALONI@example.com", "password": PASSWORD,
                                                              "display_name": "x"})

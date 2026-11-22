@@ -13,7 +13,7 @@ from typing import Any
 from starlette.applications import Starlette
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
-from starlette.responses import FileResponse, JSONResponse, Response
+from starlette.responses import JSONResponse, Response
 from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 
@@ -103,17 +103,11 @@ async def unhandled_error_handler(request: Request, exc: Exception) -> Response:
 
 
 def _frontend_routes(dist: str | None) -> list[Route | Mount]:
+    """Serve the built single-page app (index.html, assets, fonts) from one origin,
+    so cookies stay same-site and the strict CSP ('self') holds."""
     if not dist or not (Path(dist) / "index.html").exists():
         return []
-    index = Path(dist) / "index.html"
-
-    async def spa(request: Request) -> Response:
-        return FileResponse(index, headers={"Cache-Control": "no-cache"})
-
-    routes: list[Route | Mount] = [Route("/", spa)]
-    if (Path(dist) / "assets").exists():
-        routes.append(Mount("/assets", app=StaticFiles(directory=Path(dist) / "assets"), name="assets"))
-    return routes
+    return [Mount("/", app=StaticFiles(directory=dist, html=True), name="frontend")]
 
 
 def create_app(settings: Settings | None = None, *, clock: Clock | None = None,

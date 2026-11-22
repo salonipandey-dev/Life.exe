@@ -13,7 +13,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from lifeexe.core.timeutil import is_valid_timezone
+from lifeexe.core.timeutil import normalize_timezone
 from lifeexe.domain.habits import Measure, ScheduleKind
 from lifeexe.domain.quests import Priority, QuestCategory, Recurrence
 from lifeexe.domain.rewards import Attribute, Difficulty
@@ -52,9 +52,10 @@ class RegisterIn(In):
     @field_validator("timezone")
     @classmethod
     def _tz(cls, v: str) -> str:
-        if not is_valid_timezone(v):
+        canonical = normalize_timezone(v)
+        if canonical is None:
             raise ValueError("Unknown time zone.")
-        return v
+        return canonical
 
 
 class LoginIn(In):
@@ -106,6 +107,7 @@ class ProfileOptions(Out):
 
 class ProfileOut(Out):
     user_id: int
+    today: str
     email: str
     display_name: str
     title: str

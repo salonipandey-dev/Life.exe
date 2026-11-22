@@ -7,7 +7,7 @@ from typing import Any
 from lifeexe.core.db import Database
 from lifeexe.core.errors import BadRequest, Unauthorized
 from lifeexe.core.security import hash_password, hash_token, verify_password
-from lifeexe.core.timeutil import Clock, is_valid_timezone, to_iso
+from lifeexe.core.timeutil import Clock, normalize_timezone, to_iso
 from lifeexe.domain.achievements import BY_KEY
 from lifeexe.domain.character import AVATARS, THEMES, TITLES, title_unlock_level, unlocked_titles
 from lifeexe.domain.habits import week_start
@@ -47,6 +47,7 @@ class ProfileService:
             by_attr = ledger.xp_by_attribute(conn, user_id)
             return {
                 "user_id": user_id,
+                "today": user_day(conn, user_id, self.clock.now()).today_iso,
                 "email": p["email"],
                 "display_name": p["display_name"],
                 "title": p["title"],
@@ -78,8 +79,11 @@ class ProfileService:
 
     def update(self, user_id: int, changes: dict[str, Any]) -> dict[str, Any]:
         with self.db.transaction() as conn:
-            if "timezone" in changes and not is_valid_timezone(changes["timezone"]):
-                raise BadRequest("Unknown time zone.")
+            if "timezone" in changes:
+                canonical = normalize_timezone(changes["timezone"])
+                if canonical is None:
+                    raise BadRequest("Unknown time zone.")
+                changes = {**changes, "timezone": canonical}
             if "avatar" in changes and changes["avatar"] not in AVATARS:
                 raise BadRequest("Unknown avatar.")
             if "theme" in changes and changes["theme"] not in THEMES:
