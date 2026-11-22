@@ -29,8 +29,14 @@ def test_full_vertical_slice(client: TestClient, app) -> None:  # type: ignore[n
 
     result = complete(client, q["id"])
     assert result["quest"]["status"] == "COMPLETED"
-    assert result["reward"] == {"xp_awarded": 15, "base_xp": 15, "coins_awarded": 3, "capped": False,
-                                "daily_cap": 1500, "occurrence_key": "once"}
+    assert result["reward"] == {
+        "xp_awarded": 15,
+        "base_xp": 15,
+        "coins_awarded": 3,
+        "capped": False,
+        "daily_cap": 1500,
+        "occurrence_key": "once",
+    }
     assert result["progress"]["total_xp"] == 15 and result["progress"]["level"] == 1
     assert result["leveled_up"] is False
     assert [a["key"] for a in result["achievements_unlocked"]] == ["first_quest"]
@@ -156,8 +162,9 @@ def test_daily_cap_limits_xp_but_keeps_completion(make_app) -> None:  # type: ig
 
 def test_edit_rules(client: TestClient) -> None:
     q = create_quest(client, difficulty="EASY")
-    r = client.patch(f"/api/v1/quests/{q['id']}", json={"title": "Renamed", "due_date": "2026-11-30",
-                                                       "difficulty": "HARD"})
+    r = client.patch(
+        f"/api/v1/quests/{q['id']}", json={"title": "Renamed", "due_date": "2026-11-30", "difficulty": "HARD"}
+    )
     assert r.status_code == 200 and r.json()["xp_reward"] == 70 and r.json()["due_date"] == "2026-11-30"
     r = client.patch(f"/api/v1/quests/{q['id']}", json={"due_date": None})
     assert r.json()["due_date"] is None
@@ -197,8 +204,16 @@ def test_delete_and_archive_rules(client: TestClient) -> None:
 def test_lifecycle_pause_cancel_restore_expire(client: TestClient) -> None:
     q = create_quest(client, as_draft=True)
     assert q["status"] == "DRAFT"
-    seq = [("publish", "AVAILABLE"), ("start", "ACTIVE"), ("pause", "PAUSED"), ("resume", "ACTIVE"),
-           ("cancel", "CANCELLED"), ("restore", "AVAILABLE"), ("expire", "EXPIRED"), ("restore", "AVAILABLE")]
+    seq = [
+        ("publish", "AVAILABLE"),
+        ("start", "ACTIVE"),
+        ("pause", "PAUSED"),
+        ("resume", "ACTIVE"),
+        ("cancel", "CANCELLED"),
+        ("restore", "AVAILABLE"),
+        ("expire", "EXPIRED"),
+        ("restore", "AVAILABLE"),
+    ]
     for action, expected in seq:
         r = client.post(f"/api/v1/quests/{q['id']}/actions/{action}")
         assert r.status_code == 200, (action, r.text)

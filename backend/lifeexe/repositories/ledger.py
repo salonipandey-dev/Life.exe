@@ -29,8 +29,20 @@ def insert_xp_event(conn: Connection, e: NewXpEvent) -> int:
                                   skill_id, attribute, idempotency_key, reverses_event_id,
                                   local_date, created_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-        (e.user_id, e.amount, e.base_amount, e.reason, e.source_type, e.source_id, e.skill_id,
-         e.attribute, e.idempotency_key, e.reverses_event_id, e.local_date, e.created_at),
+        (
+            e.user_id,
+            e.amount,
+            e.base_amount,
+            e.reason,
+            e.source_type,
+            e.source_id,
+            e.skill_id,
+            e.attribute,
+            e.idempotency_key,
+            e.reverses_event_id,
+            e.local_date,
+            e.created_at,
+        ),
     )
     return int(cur.lastrowid or 0)
 
@@ -126,6 +138,7 @@ def recent_xp_events(conn: Connection, user_id: int, limit: int) -> list[Row]:
 
 # --- coins --------------------------------------------------------------------
 
+
 def insert_coin_tx(
     conn: Connection, user_id: int, amount: int, reason: str, xp_event_id: int | None, key: str, now: str
 ) -> int:
@@ -147,7 +160,7 @@ def coin_tx_for_xp_event(conn: Connection, user_id: int, xp_event_id: int) -> Ro
 
 def coin_balance(conn: Connection, user_id: int) -> int:
     return int(
-        conn.execute(
-            "SELECT COALESCE(SUM(amount), 0) FROM coin_transactions WHERE user_id = ?", (user_id,)
-        ).fetchone()[0]
+        conn.execute("SELECT COALESCE(SUM(amount), 0) FROM coin_transactions WHERE user_id = ?", (user_id,)).fetchone()[
+            0
+        ]
     )

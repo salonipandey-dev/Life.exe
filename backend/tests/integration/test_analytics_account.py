@@ -28,8 +28,13 @@ def test_analytics_matches_recorded_events(client: TestClient, clock: FixedClock
     complete(client, q3["id"])
 
     a = client.get("/api/v1/analytics/summary", params={"from": "2026-11-20", "to": "2026-11-24"}).json()
-    assert a["range"] == {"from": "2026-11-20", "to": "2026-11-24", "days": 5, "timezone": "Asia/Kolkata",
-                          "day_start_hour": 4}
+    assert a["range"] == {
+        "from": "2026-11-20",
+        "to": "2026-11-24",
+        "days": 5,
+        "timezone": "Asia/Kolkata",
+        "day_start_hour": 4,
+    }
     xp = {p["date"]: p["value"] for p in a["series"]["net_xp"]}
     assert xp == {"2026-11-20": 0, "2026-11-21": 0, "2026-11-22": 155, "2026-11-23": 0, "2026-11-24": 15}
     assert a["totals"] == {"net_xp": 170, "quest_completions": 2, "habit_days": 1, "active_days": 2}
@@ -60,11 +65,18 @@ def test_analytics_range_validation(client: TestClient) -> None:
 
 
 def test_profile_settings(client: TestClient) -> None:
-    r = client.patch("/api/v1/profile", json={"display_name": "Saloni P", "timezone": "Europe/London",
-                                              "day_start_hour": 0, "avatar": "orbit"})
+    r = client.patch(
+        "/api/v1/profile",
+        json={"display_name": "Saloni P", "timezone": "Europe/London", "day_start_hour": 0, "avatar": "orbit"},
+    )
     assert r.status_code == 200
     p = r.json()
-    assert (p["display_name"], p["timezone"], p["day_start_hour"], p["avatar"]) == ("Saloni P", "Europe/London", 0, "orbit")
+    assert (p["display_name"], p["timezone"], p["day_start_hour"], p["avatar"]) == (
+        "Saloni P",
+        "Europe/London",
+        0,
+        "orbit",
+    )
     assert client.patch("/api/v1/profile", json={"timezone": "Nowhere/City"}).status_code == 400
     assert client.patch("/api/v1/profile", json={"day_start_hour": 9}).status_code == 422
     locked = client.patch("/api/v1/profile", json={"title": "Legend"})
@@ -94,15 +106,24 @@ def test_export_contains_data_but_no_secrets(client: TestClient) -> None:
 
 def test_change_password_revokes_other_sessions(client: TestClient, app) -> None:  # type: ignore[no-untyped-def]
     other = new_client(app)
-    assert other.post("/api/v1/auth/login", json={"email": "saloni@example.com", "password": PASSWORD}).status_code == 200
+    assert (
+        other.post("/api/v1/auth/login", json={"email": "saloni@example.com", "password": PASSWORD}).status_code == 200
+    )
     bad = client.post("/api/v1/account/password", json={"current_password": "wrong-wrong", "new_password": "x" * 12})
     assert bad.status_code == 401
-    ok = client.post("/api/v1/account/password", json={"current_password": PASSWORD, "new_password": "a brand new passphrase"})
+    ok = client.post(
+        "/api/v1/account/password", json={"current_password": PASSWORD, "new_password": "a brand new passphrase"}
+    )
     assert ok.status_code == 204
     assert client.get("/api/v1/auth/me").status_code == 200  # this device stays signed in
     assert other.get("/api/v1/auth/me").status_code == 401  # other devices are signed out
     fresh = new_client(app)
-    assert fresh.post("/api/v1/auth/login", json={"email": "saloni@example.com", "password": "a brand new passphrase"}).status_code == 200
+    assert (
+        fresh.post(
+            "/api/v1/auth/login", json={"email": "saloni@example.com", "password": "a brand new passphrase"}
+        ).status_code
+        == 200
+    )
 
 
 def test_delete_account_removes_every_row(app) -> None:  # type: ignore[no-untyped-def]
@@ -124,8 +145,12 @@ def test_delete_account_removes_every_row(app) -> None:  # type: ignore[no-untyp
 
     conn = sqlite3.connect(app.state.services.db.path)
     try:
-        tables = [r[0] for r in conn.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name NOT IN ('users','schema_migrations')")]
+        tables = [
+            r[0]
+            for r in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name NOT IN ('users','schema_migrations')"
+            )
+        ]
         for t in tables:
             assert conn.execute(f"SELECT COUNT(*) FROM {t} WHERE user_id = 2").fetchone()[0] == 0, t
             # the other account is untouched

@@ -85,8 +85,7 @@ def _error_body(code: str, message: str, details: Any = None) -> dict[str, Any]:
 async def app_error_handler(request: Request, exc: Exception) -> Response:
     assert isinstance(exc, AppError)
     headers = {"Retry-After": str(exc.retry_after)} if isinstance(exc, RateLimited) else None
-    return JSONResponse(_error_body(exc.code, exc.message, exc.details), status_code=exc.status_code,
-                        headers=headers)
+    return JSONResponse(_error_body(exc.code, exc.message, exc.details), status_code=exc.status_code, headers=headers)
 
 
 async def http_error_handler(request: Request, exc: Exception) -> Response:
@@ -110,8 +109,9 @@ def _frontend_routes(dist: str | None) -> list[Route | Mount]:
     return [Mount("/", app=StaticFiles(directory=dist, html=True), name="frontend")]
 
 
-def create_app(settings: Settings | None = None, *, clock: Clock | None = None,
-               game: GameConfig | None = None) -> Starlette:
+def create_app(
+    settings: Settings | None = None, *, clock: Clock | None = None, game: GameConfig | None = None
+) -> Starlette:
     settings = settings or Settings.from_env()
     configure_logging(settings.log_level)
     services = build_services(settings, clock, game)

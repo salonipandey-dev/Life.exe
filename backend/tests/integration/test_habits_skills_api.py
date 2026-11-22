@@ -98,8 +98,10 @@ def test_skill_graph_cycle_rejected_with_path(client: TestClient) -> None:
     r = client.post(f"/api/v1/skills/{python['id']}/prerequisites", json={"prerequisite_id": pandas["id"]})
     assert r.status_code == 409
     assert "circular" in r.json()["error"]["message"] and "Pandas" in r.json()["error"]["message"]
-    assert client.post(f"/api/v1/skills/{python['id']}/prerequisites",
-                       json={"prerequisite_id": python["id"]}).status_code == 409
+    assert (
+        client.post(f"/api/v1/skills/{python['id']}/prerequisites", json={"prerequisite_id": python["id"]}).status_code
+        == 409
+    )
     # roadmap order: prerequisites always come first
     order = [s["name"] for s in client.get("/api/v1/skills").json()["skills"]]
     assert order.index("Python") < order.index("Pandas") < order.index("Data Cleaning")
@@ -109,8 +111,10 @@ def test_skill_needs_both_xp_and_evidence(client: TestClient) -> None:
     skills = {s["name"]: s for s in client.get("/api/v1/skills").json()["skills"]}
     sql, joins = skills["SQL"], skills["SQL Joins"]
     assert joins["status"] == "LOCKED"
-    r = client.post(f"/api/v1/skills/{sql['id']}/evidence",
-                    json={"title": "Wrote a GROUP BY report", "url": "https://github.com/example/sql"})
+    r = client.post(
+        f"/api/v1/skills/{sql['id']}/evidence",
+        json={"title": "Wrote a GROUP BY report", "url": "https://github.com/example/sql"},
+    )
     assert r.status_code == 201 and r.json()["status"] == "IN_PROGRESS"  # evidence but no XP
     assert [a["key"] for a in r.json()["achievements_unlocked"]] == ["proof_of_work"]
     for _ in range(3):
@@ -120,8 +124,12 @@ def test_skill_needs_both_xp_and_evidence(client: TestClient) -> None:
     after = {s["name"]: s for s in client.get("/api/v1/skills").json()["skills"]}
     assert after["SQL"]["status"] == "DEMONSTRATED"
     assert after["SQL Joins"]["status"] == "AVAILABLE"
-    assert client.post(f"/api/v1/skills/{sql['id']}/evidence",
-                       json={"title": "x", "url": "javascript:alert(1)"}).status_code == 422
+    assert (
+        client.post(
+            f"/api/v1/skills/{sql['id']}/evidence", json={"title": "x", "url": "javascript:alert(1)"}
+        ).status_code
+        == 422
+    )
 
 
 def test_custom_skill_crud(client: TestClient) -> None:

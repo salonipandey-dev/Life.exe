@@ -79,7 +79,9 @@ def test_database_unique_index_is_the_last_line_of_defence(client: TestClient, a
         try:
             conn.execute(
                 "INSERT INTO quest_completions (user_id, quest_id, occurrence_key, local_date, completed_at) "
-                "VALUES (1, ?, 'once', '2026-11-22', 'x')", (q["id"],))
+                "VALUES (1, ?, 'once', '2026-11-22', 'x')",
+                (q["id"],),
+            )
             raise AssertionError("duplicate live completion was accepted")
         except sqlite3.IntegrityError as exc:
             assert "UNIQUE" in str(exc)
@@ -87,7 +89,8 @@ def test_database_unique_index_is_the_last_line_of_defence(client: TestClient, a
             conn.execute(
                 "INSERT INTO xp_events (user_id, amount, base_amount, reason, source_type, idempotency_key, "
                 "local_date, created_at) VALUES (1, 35, 35, 'QUEST_COMPLETED', 'QUEST_COMPLETION', "
-                "'quest_completion:1', '2026-11-22', 'x')")
+                "'quest_completion:1', '2026-11-22', 'x')"
+            )
             raise AssertionError("duplicate idempotency key was accepted")
         except sqlite3.IntegrityError as exc:
             assert "UNIQUE" in str(exc)
@@ -107,8 +110,9 @@ def test_failed_transaction_leaves_no_partial_rows(client: TestClient, app, monk
         raise RuntimeError("simulated crash")
 
     monkeypatch.setattr(quests_service, "evaluate_achievements", boom)
-    raw = TestClient(app, headers=CSRF, cookies={"lifeexe_session": client.cookies["lifeexe_session"]},
-                     raise_server_exceptions=False)
+    raw = TestClient(
+        app, headers=CSRF, cookies={"lifeexe_session": client.cookies["lifeexe_session"]}, raise_server_exceptions=False
+    )
     r = raw.post(f"/api/v1/quests/{q['id']}/complete")
     assert r.status_code == 500 and "simulated" not in r.text  # no internals leaked
     conn = sqlite3.connect(app.state.services.db.path)

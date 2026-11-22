@@ -19,10 +19,12 @@ def new_client(app: Starlette) -> TestClient:
     return TestClient(app, headers=CSRF)
 
 
-def register(client: TestClient, email: str = "saloni@example.com", timezone: str = "Asia/Kolkata",
-             name: str = "Saloni") -> dict[str, Any]:
-    r = client.post("/api/v1/auth/register",
-                    json={"email": email, "password": PASSWORD, "display_name": name, "timezone": timezone})
+def register(
+    client: TestClient, email: str = "saloni@example.com", timezone: str = "Asia/Kolkata", name: str = "Saloni"
+) -> dict[str, Any]:
+    r = client.post(
+        "/api/v1/auth/register", json={"email": email, "password": PASSWORD, "display_name": name, "timezone": timezone}
+    )
     assert r.status_code == 201, r.text
     return dict(r.json())
 

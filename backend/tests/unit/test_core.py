@@ -176,7 +176,22 @@ def test_insight_text_and_basis() -> None:
 def test_achievement_conditions() -> None:
     base = AchievementStats(0, 0, 0, 1, 0, 0, 0, 0)
     assert earned_keys(base) == set()
-    s = AchievementStats(quests_completed=10, epic_quests_completed=1, boss_quests_completed=0, level=5,
-                         habit_days_done=1, best_daily_streak=7, evidence_count=1, skills_demonstrated=0)
-    assert earned_keys(s) == {"first_quest", "ten_quests", "epic_quest", "level_5", "first_checkin",
-                              "streak_7", "proof_of_work"}
+    s = AchievementStats(
+        quests_completed=10,
+        epic_quests_completed=1,
+        boss_quests_completed=0,
+        level=5,
+        habit_days_done=1,
+        best_daily_streak=7,
+        evidence_count=1,
+        skills_demonstrated=0,
+    )
+    assert earned_keys(s) == {
+        "first_quest",
+        "ten_quests",
+        "epic_quest",
+        "level_5",
+        "first_checkin",
+        "streak_7",
+        "proof_of_work",
+    }

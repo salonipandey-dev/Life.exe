@@ -38,9 +38,7 @@ class AuthService:
         try:
             with self.db.transaction() as conn:
                 user_id = users_repo.create_user(conn, email, password_hash, to_iso(now))
-                users_repo.create_profile(
-                    conn, user_id, display_name, TITLES[0][1], AVATARS[0], timezone, to_iso(now)
-                )
+                users_repo.create_profile(conn, user_id, display_name, TITLES[0][1], AVATARS[0], timezone, to_iso(now))
                 seed_default_skills(conn, user_id, to_iso(now))
                 return self._issue(conn, user_id)
         except Exception as exc:

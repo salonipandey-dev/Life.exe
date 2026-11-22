@@ -119,9 +119,7 @@ def next_status(status: QuestStatus, action: QuestAction, recurrence: Recurrence
         raise InvalidTransition(f"Cannot {action.value} a quest that is {status.value}.") from None
 
 
-def allowed_actions(
-    status: QuestStatus, recurrence: Recurrence, occurrence_completed: bool
-) -> list[QuestAction]:
+def allowed_actions(status: QuestStatus, recurrence: Recurrence, occurrence_completed: bool) -> list[QuestAction]:
     """Actions the UI may offer. The UI never re-implements the state machine."""
     actions = [a for (s, a) in _table(recurrence) if s is status]
     if recurrence is not Recurrence.NONE and status is S.ACTIVE:

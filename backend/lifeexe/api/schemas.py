@@ -31,6 +31,7 @@ class Out(BaseModel):
 
 # --- auth -----------------------------------------------------------------------
 
+
 def _email(v: str) -> str:
     v = v.strip().lower()
     if len(v) > 254 or not EMAIL_RE.match(v):
@@ -74,6 +75,7 @@ class SessionOut(Out):
 
 
 # --- progress / profile -----------------------------------------------------------
+
 
 class ProgressOut(Out):
     level: int
@@ -144,6 +146,7 @@ class DeleteAccountIn(In):
 
 # --- quests ---------------------------------------------------------------------
 
+
 class SkillRef(Out):
     id: int
     name: str
@@ -177,9 +180,8 @@ class QuestUpdateIn(In):
     skill_id: int | None = Field(default=None, ge=1)
 
     @model_validator(mode="after")
-    def _no_null_required(self) -> "QuestUpdateIn":
-        for name in ("title", "description", "category", "priority", "difficulty", "recurrence",
-                     "completion_criteria"):
+    def _no_null_required(self) -> QuestUpdateIn:
+        for name in ("title", "description", "category", "priority", "difficulty", "recurrence", "completion_criteria"):
             if name in self.model_fields_set and getattr(self, name) is None:
                 raise ValueError(f"{name} cannot be null")
         return self
@@ -284,6 +286,7 @@ class ReopenOut(Out):
 
 # --- habits ---------------------------------------------------------------------
 
+
 class HabitCreateIn(In):
     name: str = Field(min_length=1, max_length=80)
     description: str = Field(default="", max_length=500)
@@ -295,7 +298,7 @@ class HabitCreateIn(In):
     attribute: Attribute = Attribute.DISCIPLINE
 
     @model_validator(mode="after")
-    def _consistent(self) -> "HabitCreateIn":
+    def _consistent(self) -> HabitCreateIn:
         if any(d < 0 or d > 6 for d in self.weekdays) or len(set(self.weekdays)) != len(self.weekdays):
             raise ValueError("weekdays must be distinct values 0 (Mon) .. 6 (Sun)")
         if self.schedule_kind is ScheduleKind.WEEKLY_COUNT and self.target_per_week is None:
@@ -360,6 +363,7 @@ class IncludeArchivedQuery(In):
 
 
 # --- skills ---------------------------------------------------------------------
+
 
 class SkillCreateIn(In):
     name: str = Field(min_length=1, max_length=60)
@@ -434,6 +438,7 @@ class SkillListOut(Out):
 
 
 # --- analytics / dashboard / achievements -------------------------------------------
+
 
 class AnalyticsQuery(In):
     model_config = ConfigDict(extra="forbid", populate_by_name=True)

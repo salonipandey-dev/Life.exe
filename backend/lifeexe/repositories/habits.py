@@ -6,8 +6,16 @@ from lifeexe.core.db import Connection, Row
 from lifeexe.repositories import build_update
 
 UPDATABLE = (
-    "name", "description", "schedule_kind", "weekdays_mask", "target_per_week", "measure",
-    "target_value", "attribute", "archived_at", "updated_at",
+    "name",
+    "description",
+    "schedule_kind",
+    "weekdays_mask",
+    "target_per_week",
+    "measure",
+    "target_value",
+    "attribute",
+    "archived_at",
+    "updated_at",
 )
 
 
@@ -21,9 +29,7 @@ def insert(conn: Connection, user_id: int, fields: dict[str, Any]) -> int:
 
 
 def get(conn: Connection, user_id: int, habit_id: int) -> Row | None:
-    row: Row | None = conn.execute(
-        "SELECT * FROM habits WHERE user_id = ? AND id = ?", (user_id, habit_id)
-    ).fetchone()
+    row: Row | None = conn.execute("SELECT * FROM habits WHERE user_id = ? AND id = ?", (user_id, habit_id)).fetchone()
     return row
 
 
@@ -57,8 +63,9 @@ def get_log(conn: Connection, user_id: int, habit_id: int, local_date: str) -> R
     return row
 
 
-def insert_log(conn: Connection, user_id: int, habit_id: int, local_date: str, entry_type: str,
-               value: int, note: str, now: str) -> int:
+def insert_log(
+    conn: Connection, user_id: int, habit_id: int, local_date: str, entry_type: str, value: int, note: str, now: str
+) -> int:
     cur = conn.execute(
         """INSERT INTO habit_logs (user_id, habit_id, local_date, entry_type, value, note, created_at, updated_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
@@ -76,9 +83,7 @@ def update_log(conn: Connection, user_id: int, log_id: int, entry_type: str, val
 
 
 def set_award(conn: Connection, user_id: int, log_id: int, event_id: int | None) -> None:
-    conn.execute(
-        "UPDATE habit_logs SET award_event_id = ? WHERE id = ? AND user_id = ?", (event_id, log_id, user_id)
-    )
+    conn.execute("UPDATE habit_logs SET award_event_id = ? WHERE id = ? AND user_id = ?", (event_id, log_id, user_id))
 
 
 def delete_log(conn: Connection, user_id: int, log_id: int) -> None:
@@ -113,9 +118,7 @@ def end_pause(conn: Connection, user_id: int, pause_id: int, end: str | None) ->
     if end is None:
         conn.execute("DELETE FROM habit_pauses WHERE id = ? AND user_id = ?", (pause_id, user_id))
     else:
-        conn.execute(
-            "UPDATE habit_pauses SET end_date = ? WHERE id = ? AND user_id = ?", (end, pause_id, user_id)
-        )
+        conn.execute("UPDATE habit_pauses SET end_date = ? WHERE id = ? AND user_id = ?", (end, pause_id, user_id))
 
 
 def done_days_count(conn: Connection, user_id: int) -> int:

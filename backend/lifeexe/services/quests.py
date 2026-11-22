@@ -47,8 +47,15 @@ from lifeexe.services.common import UserDay, progress_dict, user_day
 
 #: Actions handled by the generic transition endpoint (no reward side effects).
 SIMPLE_ACTIONS = frozenset(
-    {QuestAction.PUBLISH, QuestAction.START, QuestAction.PAUSE, QuestAction.RESUME,
-     QuestAction.CANCEL, QuestAction.EXPIRE, QuestAction.RESTORE}
+    {
+        QuestAction.PUBLISH,
+        QuestAction.START,
+        QuestAction.PAUSE,
+        QuestAction.RESUME,
+        QuestAction.CANCEL,
+        QuestAction.EXPIRE,
+        QuestAction.RESTORE,
+    }
 )
 
 
@@ -74,7 +81,8 @@ def quest_dict(row: Row, ud: UserDay, game: GameConfig) -> dict[str, Any]:
         "completion_criteria": row["completion_criteria"],
         "skill": (
             {"id": row["skill_id"], "name": row["skill_name"], "attribute": row["skill_attribute"]}
-            if row["skill_id"] is not None else None
+            if row["skill_id"] is not None
+            else None
         ),
         "xp_reward": base,
         "coin_reward": coins_for_xp(base, game),
@@ -161,9 +169,10 @@ class QuestService:
                 raise Conflict("Unarchive the quest before editing it.")
             if status not in EDITABLE_STATUSES:
                 raise Conflict(f"A {status.value} quest cannot be edited. Reopen or restore it first.")
-            if "recurrence" in changes and changes["recurrence"] != row["recurrence"]:
-                if status not in (QuestStatus.DRAFT, QuestStatus.AVAILABLE) or int(row["completion_count"]):
-                    raise Conflict("Recurrence can only change before a quest is started.")
+            recurrence_changed = "recurrence" in changes and changes["recurrence"] != row["recurrence"]
+            started = status not in (QuestStatus.DRAFT, QuestStatus.AVAILABLE) or int(row["completion_count"])
+            if recurrence_changed and started:
+                raise Conflict("Recurrence can only change before a quest is started.")
             if "skill_id" in changes:
                 self._check_skill(conn, user_id, changes["skill_id"])
             if changes:
@@ -188,7 +197,9 @@ class QuestService:
             if archived and status not in TERMINAL_STATUSES and status is not QuestStatus.DRAFT:
                 raise Conflict("Only drafts and finished, cancelled or expired quests can be archived.")
             quests_repo.update(
-                conn, user_id, quest_id,
+                conn,
+                user_id,
+                quest_id,
                 {"archived_at": ud.now_iso if archived else None, "updated_at": ud.now_iso},
             )
             return quest_dict(self._load(conn, ud, quest_id), ud, self.game)
@@ -325,8 +336,13 @@ class QuestService:
                 coins = ledger.coin_tx_for_xp_event(conn, user_id, int(award["id"]))
                 if coins is not None:
                     ledger.insert_coin_tx(
-                        conn, user_id, -int(coins["amount"]), "QUEST_REWARD_REVERSED", int(award["id"]),
-                        f"coins:reversal:{award['id']}", ud.now_iso,
+                        conn,
+                        user_id,
+                        -int(coins["amount"]),
+                        "QUEST_REWARD_REVERSED",
+                        int(award["id"]),
+                        f"coins:reversal:{award['id']}",
+                        ud.now_iso,
                     )
             fields: dict[str, Any] = {"status": new_status.value, "updated_at": ud.now_iso}
             if recurrence is Recurrence.NONE:

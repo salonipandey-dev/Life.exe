@@ -33,7 +33,7 @@ class Settings:
         return self.env == "production"
 
     @classmethod
-    def from_env(cls) -> "Settings":
+    def from_env(cls) -> Settings:
         env = os.getenv("LIFEEXE_ENV", "development")
         defaults = cls()
         origins = os.getenv("LIFEEXE_ALLOWED_ORIGINS", "")
@@ -44,9 +44,7 @@ class Settings:
             # Secure cookies default ON in production; never silently off there.
             secure_cookies=_bool(os.getenv("LIFEEXE_SECURE_COOKIES"), env == "production"),
             frontend_dist=os.getenv("LIFEEXE_FRONTEND_DIST", defaults.frontend_dist) or None,
-            auth_rate_limit_per_minute=int(
-                os.getenv("LIFEEXE_AUTH_RATE_LIMIT", defaults.auth_rate_limit_per_minute)
-            ),
+            auth_rate_limit_per_minute=int(os.getenv("LIFEEXE_AUTH_RATE_LIMIT", defaults.auth_rate_limit_per_minute)),
             log_level=os.getenv("LIFEEXE_LOG_LEVEL", defaults.log_level),
             allowed_origins=tuple(o.strip() for o in origins.split(",") if o.strip()),
         )

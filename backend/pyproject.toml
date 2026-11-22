@@ -33,3 +33,12 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "S", "SIM"]
 ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+# Repositories build SQL text only from code-defined column/table whitelists
+# and fixed fragments; every value is a bound parameter (see build_update).
+"lifeexe/repositories/*" = ["S608"]
+"lifeexe/services/profile.py" = ["S608"]  # export loops over a fixed table whitelist
+# Tests drive subprocesses (PostgreSQL, the server) and use fixed test secrets.
+"tests/**" = ["S105", "S310", "S603", "S608"]
+"scripts/**" = ["S105"]

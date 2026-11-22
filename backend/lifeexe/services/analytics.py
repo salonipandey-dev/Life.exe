@@ -25,12 +25,23 @@ MAX_RANGE_DAYS = 366
 DEFAULT_RANGE_DAYS = 28
 
 METRIC_DEFINITIONS: dict[str, str] = {
-    "net_xp": "Sum of XP ledger amounts dated to each local day, including reversals (so a reopened quest nets to zero).",
-    "quest_completions": "Live (not reopened) quest completions, by the local day they were recorded. A recurring quest counts once per occurrence.",
+    "net_xp": (
+        "Sum of XP ledger amounts dated to each local day, including reversals (so a reopened quest nets to zero)."
+    ),
+    "quest_completions": (
+        "Live (not reopened) quest completions, by the local day they were recorded. "
+        "A recurring quest counts once per occurrence."
+    ),
     "habit_days": "Habit entries that met their daily target, by local day.",
     "activity": "Quest completions plus habit days met, per local day.",
-    "completion_rate": "One-off quests due in the week that were completed, divided by those due in the week that are completed or already past due. Drafts, cancelled quests and quests without a due date are excluded.",
-    "xp_by_attribute": "Net XP in the range grouped by the attribute of the linked skill or habit. 'UNASSIGNED' is XP from quests without a linked skill.",
+    "completion_rate": (
+        "One-off quests due in the week that were completed, divided by those due in the week that are "
+        "completed or already past due. Drafts, cancelled quests and quests without a due date are excluded."
+    ),
+    "xp_by_attribute": (
+        "Net XP in the range grouped by the attribute of the linked skill or habit. "
+        "'UNASSIGNED' is XP from quests without a linked skill."
+    ),
 }
 
 
@@ -68,8 +79,14 @@ class AnalyticsService:
             names = {int(r["id"]): (r["name"], r["tree"]) for r in skills_repo.list_skills(conn, user_id, True)}
             by_skill = sorted(ledger.xp_by_skill(conn, user_id, s, e).items(), key=lambda kv: (-kv[1], kv[0]))
             skills = [
-                {"skill_id": sid, "name": names.get(sid, ("Unknown", ""))[0], "tree": names.get(sid, ("", ""))[1], "xp": xp}
-                for sid, xp in by_skill if xp > 0
+                {
+                    "skill_id": sid,
+                    "name": names.get(sid, ("Unknown", ""))[0],
+                    "tree": names.get(sid, ("", ""))[1],
+                    "xp": xp,
+                }
+                for sid, xp in by_skill
+                if xp > 0
             ][:8]
 
             categories = analytics_repo.completions_by_category(conn, user_id, s, e)
@@ -79,25 +96,43 @@ class AnalyticsService:
             ws = week_start(ud.today)
             last_ws, last_we = ws - timedelta(days=7), ws - timedelta(days=1)
             this_c = sum(analytics_repo.completions_by_day(conn, user_id, ws.isoformat(), ud.today_iso).values())
-            last_c = sum(analytics_repo.completions_by_day(conn, user_id, last_ws.isoformat(), last_we.isoformat()).values())
-            this_rate = Rate(*analytics_repo.due_quest_rate(conn, user_id, ws.isoformat(), (ws + timedelta(days=6)).isoformat(), ud.today_iso))
-            last_rate = Rate(*analytics_repo.due_quest_rate(conn, user_id, last_ws.isoformat(), last_we.isoformat(), ud.today_iso))
+            last_c = sum(
+                analytics_repo.completions_by_day(conn, user_id, last_ws.isoformat(), last_we.isoformat()).values()
+            )
+            this_rate = Rate(
+                *analytics_repo.due_quest_rate(
+                    conn, user_id, ws.isoformat(), (ws + timedelta(days=6)).isoformat(), ud.today_iso
+                )
+            )
+            last_rate = Rate(
+                *analytics_repo.due_quest_rate(conn, user_id, last_ws.isoformat(), last_we.isoformat(), ud.today_iso)
+            )
 
             insights = [
-                i for i in (
+                i
+                for i in (
                     completions_insight(this_c, last_c),
                     top_attribute_insight(by_attr, "in this range"),
                     completion_rate_insight(this_rate, last_rate),
-                ) if i is not None
+                )
+                if i is not None
             ]
 
             def rate_dict(r: Rate) -> dict[str, Any]:
-                return {"completed": r.achieved, "counted": r.required,
-                        "rate": None if r.value is None else round(r.value, 4)}
+                return {
+                    "completed": r.achieved,
+                    "counted": r.required,
+                    "rate": None if r.value is None else round(r.value, 4),
+                }
 
             return {
-                "range": {"from": s, "to": e, "days": (end - start).days + 1, "timezone": ud.timezone,
-                          "day_start_hour": ud.day_start_hour},
+                "range": {
+                    "from": s,
+                    "to": e,
+                    "days": (end - start).days + 1,
+                    "timezone": ud.timezone,
+                    "day_start_hour": ud.day_start_hour,
+                },
                 "totals": {
                     "net_xp": sum(xp_day.values()),
                     "quest_completions": sum(comp_day.values()),

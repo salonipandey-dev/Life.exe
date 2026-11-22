@@ -1,0 +1,11 @@
+# Local production-like run:  docker compose up --build   ->  http://localhost:8000
+# Secure cookies are disabled here because local compose serves plain HTTP.
+services:
+  app:
+    build: { context: ., dockerfile: docker/Dockerfile }
+    ports: ["8000:8000"]
+    environment:
+      LIFEEXE_SECURE_COOKIES: "false"
+    volumes: ["lifeexe-data:/data"]
+volumes:
+  lifeexe-data:

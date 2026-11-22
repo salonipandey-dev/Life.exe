@@ -12,8 +12,8 @@ import subprocess
 import sys
 import time
 import urllib.request
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 import pytest
 
@@ -45,8 +45,13 @@ def server(tmp_path_factory: pytest.TempPathFactory) -> Iterator[str]:
         "LIFEEXE_LOG_LEVEL": "WARNING",
         "LIFEEXE_AUTH_RATE_LIMIT": "100",
     }
-    proc = subprocess.Popen([sys.executable, "-m", "lifeexe"], cwd=ROOT / "backend", env=env,
-                            stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+    proc = subprocess.Popen(
+        [sys.executable, "-m", "lifeexe"],
+        cwd=ROOT / "backend",
+        env=env,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+    )
     base = f"http://127.0.0.1:{port}"
     for _ in range(100):
         try:
@@ -63,7 +68,7 @@ def server(tmp_path_factory: pytest.TempPathFactory) -> Iterator[str]:
 
 
 @pytest.fixture
-def page(server: str) -> Iterator["sync_api.Page"]:
+def page(server: str) -> Iterator[sync_api.Page]:
     with sync_api.sync_playwright() as p:
         try:
             browser = p.chromium.launch()
@@ -75,8 +80,14 @@ def page(server: str) -> Iterator["sync_api.Page"]:
         pg.on("pageerror", lambda e: errors.append(str(e)))
         # HTTP error statuses are asserted explicitly in the tests; anything else
         # logged as a console error (or any uncaught exception) fails the test.
-        pg.on("console", lambda m: errors.append(m.text)
-              if m.type == "error" and not m.text.startswith("Failed to load resource") else None)
+        pg.on(
+            "console",
+            lambda m: (
+                errors.append(m.text)
+                if m.type == "error" and not m.text.startswith("Failed to load resource")
+                else None
+            ),
+        )
         yield pg
         ARTIFACTS.mkdir(exist_ok=True)
         assert errors == [], f"browser errors: {errors}"
@@ -84,7 +95,7 @@ def page(server: str) -> Iterator["sync_api.Page"]:
         browser.close()
 
 
-def sign_up(page: "sync_api.Page", email: str, name: str = "Saloni") -> None:
+def sign_up(page: sync_api.Page, email: str, name: str = "Saloni") -> None:
     page.goto("/")
     page.get_by_role("tab", name="Create account").click()
     page.get_by_label("Display name").fill(name)
@@ -94,7 +105,7 @@ def sign_up(page: "sync_api.Page", email: str, name: str = "Saloni") -> None:
     page.get_by_role("heading", name="Today's top three").wait_for()
 
 
-def test_quest_slice_create_start_complete_level_up(page: "sync_api.Page") -> None:
+def test_quest_slice_create_start_complete_level_up(page: sync_api.Page) -> None:
     expect = sync_api.expect
     sign_up(page, "e2e-quest@example.com")
     expect(page.get_by_role("img", name="Level 1. 0 of 100 XP into this level.")).to_be_visible()
@@ -118,7 +129,8 @@ def test_quest_slice_create_start_complete_level_up(page: "sync_api.Page") -> No
     # A duplicate completion from the client is refused and changes nothing.
     status = page.evaluate("""async () => {
         const list = await (await fetch('/api/v1/quests?status=COMPLETED')).json();
-        const r = await fetch(`/api/v1/quests/${list.items[0].id}/complete`, {method: 'POST', headers: {'X-LifeExe-CSRF': '1'}});
+        const r = await fetch(`/api/v1/quests/${list.items[0].id}/complete`,
+                              {method: 'POST', headers: {'X-LifeExe-CSRF': '1'}});
         const p = await (await fetch('/api/v1/profile')).json();
         return [r.status, p.progress.total_xp];
     }""")
@@ -126,7 +138,7 @@ def test_quest_slice_create_start_complete_level_up(page: "sync_api.Page") -> No
     page.screenshot(path=str(ARTIFACTS / "e2e-command-center.png"), full_page=True)
 
 
-def test_habit_analytics_settings_and_session(page: "sync_api.Page") -> None:
+def test_habit_analytics_settings_and_session(page: sync_api.Page) -> None:
     expect = sync_api.expect
     sign_up(page, "e2e-habit@example.com", name="Tester")
 

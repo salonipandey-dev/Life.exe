@@ -18,8 +18,9 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
 from pydantic import BaseModel, ValidationError
 from starlette.concurrency import run_in_threadpool
@@ -104,8 +105,19 @@ class Api:
     ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         def register(fn: Callable[..., Any]) -> Callable[..., Any]:
             self.routes.append(
-                ApiRoute(method.upper(), self.prefix + path, fn, summary, tags, body, query, response,
-                         status_code, auth, rate_limited)
+                ApiRoute(
+                    method.upper(),
+                    self.prefix + path,
+                    fn,
+                    summary,
+                    tags,
+                    body,
+                    query,
+                    response,
+                    status_code,
+                    auth,
+                    rate_limited,
+                )
             )
             return fn
 
@@ -150,8 +162,9 @@ class Api:
                 try:
                     kwargs["query"] = r.query.model_validate(dict(request.query_params))
                 except ValidationError as exc:
-                    raise ValidationFailed("Some query parameters are invalid.",
-                                           details=_validation_details(exc)) from None
+                    raise ValidationFailed(
+                        "Some query parameters are invalid.", details=_validation_details(exc)
+                    ) from None
             ctx = Ctx(request=request, services=services)
             return await run_in_threadpool(self._invoke, r, ctx, kwargs)
 
@@ -173,13 +186,13 @@ class Api:
         else:
             content = (
                 r.response.model_validate(result).model_dump(mode="json", by_alias=True)
-                if r.response is not None else result
+                if r.response is not None
+                else result
             )
             response = JSONResponse(content, status_code=r.status_code)
         secure = ctx.services.settings.secure_cookies
         for name, value, max_age in ctx.cookies_to_set:
-            response.set_cookie(name, value, max_age=max_age, httponly=True, secure=secure,
-                                samesite="lax", path="/")
+            response.set_cookie(name, value, max_age=max_age, httponly=True, secure=secure, samesite="lax", path="/")
         for name in ctx.cookies_to_delete:
             response.delete_cookie(name, path="/", httponly=True, secure=secure, samesite="lax")
         return response
@@ -200,15 +213,20 @@ class Api:
         for r in self.routes:
             path = _PATH_PARAM.sub(lambda m: "{" + m.group(1) + "}", r.path)
             params = [
-                {"name": m.group(1), "in": "path", "required": True,
-                 "schema": {"type": "integer" if m.group(2) == "int" else "string"}}
+                {
+                    "name": m.group(1),
+                    "in": "path",
+                    "required": True,
+                    "schema": {"type": "integer" if m.group(2) == "int" else "string"},
+                }
                 for m in _PATH_PARAM.finditer(r.path)
             ]
             if r.query is not None:
                 qs = r.query.model_json_schema(by_alias=True)
                 for name, prop in qs.get("properties", {}).items():
-                    params.append({"name": name, "in": "query", "required": name in qs.get("required", []),
-                                   "schema": prop})
+                    params.append(
+                        {"name": name, "in": "query", "required": name in qs.get("required", []), "schema": prop}
+                    )
             op: dict[str, Any] = {
                 "summary": r.summary,
                 "tags": list(r.tags),
@@ -217,21 +235,26 @@ class Api:
                 "responses": {},
             }
             if r.body is not None:
-                op["requestBody"] = {"required": True,
-                                     "content": {"application/json": {"schema": schema_ref(r.body)}}}
+                op["requestBody"] = {"required": True, "content": {"application/json": {"schema": schema_ref(r.body)}}}
             ok: dict[str, Any] = {"description": "Success"}
             if r.response is not None:
                 ok["content"] = {"application/json": {"schema": schema_ref(r.response)}}
             op["responses"][str(r.status_code)] = ok
-            op["responses"]["default"] = {"description": "Error",
-                                          "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}}
+            op["responses"]["default"] = {
+                "description": "Error",
+                "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}},
+            }
             if r.auth:
                 op["security"] = [{"sessionCookie": []}]
             paths.setdefault(path, {})[r.method.lower()] = op
         components["Error"] = {
             "type": "object",
-            "properties": {"error": {"type": "object", "properties": {
-                "code": {"type": "string"}, "message": {"type": "string"}, "details": {}}}},
+            "properties": {
+                "error": {
+                    "type": "object",
+                    "properties": {"code": {"type": "string"}, "message": {"type": "string"}, "details": {}},
+                }
+            },
         }
         return {
             "openapi": "3.1.0",

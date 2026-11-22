@@ -11,8 +11,8 @@ reached at that time. Achievements grant no XP, so this cannot inflate levels.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 
 @dataclass(frozen=True)
@@ -38,25 +38,71 @@ class AchievementDef:
 
 
 CATALOG: tuple[AchievementDef, ...] = (
-    AchievementDef("first_quest", "First Quest Completed", "Complete your first quest.",
-                   "Productivity", False, lambda s: s.quests_completed >= 1),
-    AchievementDef("ten_quests", "Ten Quests", "Complete ten quest occurrences.",
-                   "Productivity", False, lambda s: s.quests_completed >= 10),
-    AchievementDef("epic_quest", "Epic Undertaking", "Complete an Epic-difficulty quest.",
-                   "Productivity", False, lambda s: s.epic_quests_completed >= 1),
-    AchievementDef("boss_slayer", "Boss Slayer", "Complete a boss quest.",
-                   "Productivity", True, lambda s: s.boss_quests_completed >= 1),
-    AchievementDef("level_5", "Level 5", "Reach level 5.",
-                   "Productivity", False, lambda s: s.level >= 5),
-    AchievementDef("first_checkin", "First Check-in", "Complete a habit for the first time.",
-                   "Consistency", False, lambda s: s.habit_days_done >= 1),
-    AchievementDef("streak_7", "Seven-Day Streak", "Keep a daily habit going for seven days.",
-                   "Consistency", False, lambda s: s.best_daily_streak >= 7),
-    AchievementDef("proof_of_work", "Proof of Work", "Record your first piece of skill evidence.",
-                   "Learning", False, lambda s: s.evidence_count >= 1),
-    AchievementDef("skill_demonstrated", "Skill Demonstrated",
-                   "Meet both the XP and evidence requirements of a skill.",
-                   "Learning", False, lambda s: s.skills_demonstrated >= 1),
+    AchievementDef(
+        "first_quest",
+        "First Quest Completed",
+        "Complete your first quest.",
+        "Productivity",
+        False,
+        lambda s: s.quests_completed >= 1,
+    ),
+    AchievementDef(
+        "ten_quests",
+        "Ten Quests",
+        "Complete ten quest occurrences.",
+        "Productivity",
+        False,
+        lambda s: s.quests_completed >= 10,
+    ),
+    AchievementDef(
+        "epic_quest",
+        "Epic Undertaking",
+        "Complete an Epic-difficulty quest.",
+        "Productivity",
+        False,
+        lambda s: s.epic_quests_completed >= 1,
+    ),
+    AchievementDef(
+        "boss_slayer",
+        "Boss Slayer",
+        "Complete a boss quest.",
+        "Productivity",
+        True,
+        lambda s: s.boss_quests_completed >= 1,
+    ),
+    AchievementDef("level_5", "Level 5", "Reach level 5.", "Productivity", False, lambda s: s.level >= 5),
+    AchievementDef(
+        "first_checkin",
+        "First Check-in",
+        "Complete a habit for the first time.",
+        "Consistency",
+        False,
+        lambda s: s.habit_days_done >= 1,
+    ),
+    AchievementDef(
+        "streak_7",
+        "Seven-Day Streak",
+        "Keep a daily habit going for seven days.",
+        "Consistency",
+        False,
+        lambda s: s.best_daily_streak >= 7,
+    ),
+    AchievementDef(
+        "proof_of_work",
+        "Proof of Work",
+        "Record your first piece of skill evidence.",
+        "Learning",
+        False,
+        lambda s: s.evidence_count >= 1,
+    ),
+    AchievementDef(
+        "skill_demonstrated",
+        "Skill Demonstrated",
+        "Meet both the XP and evidence requirements of a skill.",
+        "Learning",
+        False,
+        lambda s: s.skills_demonstrated >= 1,
+    ),
 )
 
 BY_KEY = {a.key: a for a in CATALOG}

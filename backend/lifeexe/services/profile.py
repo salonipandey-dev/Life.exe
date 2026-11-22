@@ -22,13 +22,23 @@ from lifeexe.repositories import quests as quests_repo
 from lifeexe.repositories import users as users_repo
 from lifeexe.repositories.quests import QuestFilters
 from lifeexe.services.common import progress_dict, user_day
-from lifeexe.services.habits import load_histories, habit_dict
+from lifeexe.services.habits import habit_dict, load_histories
 from lifeexe.services.quests import quest_dict
 
 #: Tables exported for data portability (password hashes and sessions excluded).
 EXPORT_TABLES = (
-    "profiles", "quests", "quest_completions", "xp_events", "coin_transactions", "habits",
-    "habit_pauses", "habit_logs", "skills", "skill_dependencies", "skill_evidence", "user_achievements",
+    "profiles",
+    "quests",
+    "quest_completions",
+    "xp_events",
+    "coin_transactions",
+    "habits",
+    "habit_pauses",
+    "habit_logs",
+    "skills",
+    "skill_dependencies",
+    "skill_evidence",
+    "user_achievements",
 )
 
 
@@ -59,8 +69,11 @@ class ProfileService:
                 "progress": progress_dict(max(total, 0)),
                 "coins": ledger.coin_balance(conn, user_id),
                 "attributes": [
-                    {"attribute": a.value, "xp": max(by_attr.get(a.value, 0), 0),
-                     "rank": level_for_xp(max(by_attr.get(a.value, 0), 0))}
+                    {
+                        "attribute": a.value,
+                        "xp": max(by_attr.get(a.value, 0), 0),
+                        "rank": level_for_xp(max(by_attr.get(a.value, 0), 0)),
+                    }
                     for a in Attribute
                 ],
                 "options": {
@@ -111,9 +124,11 @@ class ProfileService:
             today_quests = [quest_dict(r, ud, self.game) for r in today_rows]
 
             open_rows, _ = quests_repo.list_quests(
-                conn, user_id,
+                conn,
+                user_id,
                 QuestFilters(statuses=("ACTIVE", "AVAILABLE", "PAUSED"), sort="-priority", limit=200),
-                ud.day_key, ud.week_key,
+                ud.day_key,
+                ud.week_key,
             )
             open_one_off = [quest_dict(r, ud, self.game) for r in open_rows if r["recurrence"] == "NONE"]
 
@@ -137,13 +152,24 @@ class ProfileService:
             week_habit_days = sum(habits_repo.done_by_day(conn, user_id, ws.isoformat(), ud.today_iso).values())
 
             achievements = [
-                {"key": r["achievement_key"], "title": BY_KEY[r["achievement_key"]].title,
-                 "description": BY_KEY[r["achievement_key"]].description, "unlocked_at": r["unlocked_at"]}
-                for r in ach_repo.unlocked(conn, user_id)[:3] if r["achievement_key"] in BY_KEY
+                {
+                    "key": r["achievement_key"],
+                    "title": BY_KEY[r["achievement_key"]].title,
+                    "description": BY_KEY[r["achievement_key"]].description,
+                    "unlocked_at": r["unlocked_at"],
+                }
+                for r in ach_repo.unlocked(conn, user_id)[:3]
+                if r["achievement_key"] in BY_KEY
             ]
             events = [
-                {"id": e["id"], "amount": e["amount"], "reason": e["reason"], "local_date": e["local_date"],
-                 "created_at": e["created_at"], "label": e["quest_title"] or e["habit_name"] or e["reason"]}
+                {
+                    "id": e["id"],
+                    "amount": e["amount"],
+                    "reason": e["reason"],
+                    "local_date": e["local_date"],
+                    "created_at": e["created_at"],
+                    "label": e["quest_title"] or e["habit_name"] or e["reason"],
+                }
                 for e in ledger.recent_xp_events(conn, user_id, 6)
             ]
             return {
@@ -208,4 +234,3 @@ class ProfileService:
             raise Unauthorized("Password is incorrect.")
         with self.db.transaction() as conn:
             users_repo.delete_user(conn, user_id)  # ON DELETE CASCADE removes every owned row
-

@@ -58,11 +58,13 @@ class SecurityAndLoggingMiddleware:
             # cookies or query strings (which could carry personal data).
             log.info(
                 "request",
-                extra={"fields": {
-                    "request_id": request_id,
-                    "method": scope.get("method"),
-                    "path": path,
-                    "status": status["code"],
-                    "duration_ms": round((time.perf_counter() - started) * 1000, 2),
-                }},
+                extra={
+                    "fields": {
+                        "request_id": request_id,
+                        "method": scope.get("method"),
+                        "path": path,
+                        "status": status["code"],
+                        "duration_ms": round((time.perf_counter() - started) * 1000, 2),
+                    }
+                },
             )

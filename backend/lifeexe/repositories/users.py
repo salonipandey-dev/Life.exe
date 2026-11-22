@@ -25,9 +25,7 @@ def get_user(conn: Connection, user_id: int) -> Row | None:
 
 
 def update_password(conn: Connection, user_id: int, password_hash: str, now: str) -> None:
-    conn.execute(
-        "UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?", (password_hash, now, user_id)
-    )
+    conn.execute("UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?", (password_hash, now, user_id))
 
 
 def delete_user(conn: Connection, user_id: int) -> None:
@@ -61,6 +59,7 @@ def update_profile(conn: Connection, user_id: int, fields: dict[str, object]) ->
 
 # --- sessions -----------------------------------------------------------------
 
+
 def create_session(conn: Connection, user_id: int, token_hash: str, now: str, expires_at: str) -> int:
     cur = conn.execute(
         """INSERT INTO sessions (user_id, token_hash, created_at, expires_at, last_seen_at)
@@ -71,9 +70,7 @@ def create_session(conn: Connection, user_id: int, token_hash: str, now: str, ex
 
 
 def get_session(conn: Connection, token_hash: str) -> Row | None:
-    row: Row | None = conn.execute(
-        "SELECT * FROM sessions WHERE token_hash = ?", (token_hash,)
-    ).fetchone()
+    row: Row | None = conn.execute("SELECT * FROM sessions WHERE token_hash = ?", (token_hash,)).fetchone()
     return row
 
 
@@ -82,9 +79,7 @@ def delete_session(conn: Connection, token_hash: str) -> None:
 
 
 def delete_other_sessions(conn: Connection, user_id: int, keep_token_hash: str | None) -> None:
-    conn.execute(
-        "DELETE FROM sessions WHERE user_id = ? AND token_hash IS NOT ?", (user_id, keep_token_hash)
-    )
+    conn.execute("DELETE FROM sessions WHERE user_id = ? AND token_hash IS NOT ?", (user_id, keep_token_hash))
 
 
 def purge_expired_sessions(conn: Connection, now: str) -> int:

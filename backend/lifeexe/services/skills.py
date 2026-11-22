@@ -156,7 +156,9 @@ class SkillService:
             if skills_repo.get(conn, user_id, skill_id) is None:
                 raise NotFound("Skill not found.")
             now = to_iso(self.clock.now())
-            skills_repo.insert_evidence(conn, user_id, skill_id, data["title"], data.get("url"), data.get("notes", ""), now)
+            skills_repo.insert_evidence(
+                conn, user_id, skill_id, data["title"], data.get("url"), data.get("notes", ""), now
+            )
             unlocked = evaluate_achievements(conn, user_id, now)
             return {**self._detail(conn, user_id, skill_id), "achievements_unlocked": unlocked}
 

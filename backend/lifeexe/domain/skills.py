@@ -14,11 +14,9 @@ from __future__ import annotations
 
 import heapq
 from collections import defaultdict
+from collections.abc import Hashable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Hashable, Iterable, Mapping, Sequence, TypeVar
-
-N = TypeVar("N", bound=Hashable)
 
 
 class SkillStatus(StrEnum):
@@ -28,14 +26,14 @@ class SkillStatus(StrEnum):
     DEMONSTRATED = "DEMONSTRATED"
 
 
-def _prereqs(edges: Iterable[tuple[N, N]]) -> dict[N, set[N]]:
+def _prereqs[N: Hashable](edges: Iterable[tuple[N, N]]) -> dict[N, set[N]]:
     graph: dict[N, set[N]] = defaultdict(set)
     for skill, prereq in edges:
         graph[skill].add(prereq)
     return graph
 
 
-def find_cycle(nodes: Iterable[N], edges: Iterable[tuple[N, N]]) -> list[N] | None:
+def find_cycle[N: Hashable](nodes: Iterable[N], edges: Iterable[tuple[N, N]]) -> list[N] | None:
     """Return one cycle as a node path (first == last), or None if acyclic.
 
     Iterative DFS with white/grey/black colouring, so deep graphs cannot hit
@@ -73,7 +71,7 @@ def find_cycle(nodes: Iterable[N], edges: Iterable[tuple[N, N]]) -> list[N] | No
     return None
 
 
-def would_create_cycle(edges: Iterable[tuple[N, N]], new_edge: tuple[N, N]) -> bool:
+def would_create_cycle[N: Hashable](edges: Iterable[tuple[N, N]], new_edge: tuple[N, N]) -> bool:
     skill, prereq = new_edge
     if skill == prereq:
         return True
@@ -93,7 +91,7 @@ def would_create_cycle(edges: Iterable[tuple[N, N]], new_edge: tuple[N, N]) -> b
     return False
 
 
-def topological_order(
+def topological_order[N: Hashable](
     nodes: Sequence[N], edges: Iterable[tuple[N, N]], sort_key: Mapping[N, str]
 ) -> list[N]:
     """Kahn's algorithm; prerequisites come first. Ties are broken by
@@ -121,7 +119,7 @@ def topological_order(
     return order
 
 
-def depth_levels(nodes: Sequence[N], edges: Iterable[tuple[N, N]]) -> dict[N, int]:
+def depth_levels[N: Hashable](nodes: Sequence[N], edges: Iterable[tuple[N, N]]) -> dict[N, int]:
     """Tier of each node = length of the longest prerequisite chain below it."""
     edge_list = list(edges)
     order = topological_order(nodes, edge_list, {n: "" for n in nodes})
@@ -144,7 +142,7 @@ def is_demonstrated(p: SkillProgressInput) -> bool:
     return p.xp >= p.xp_required and p.evidence_count >= p.evidence_required
 
 
-def skill_statuses(
+def skill_statuses[N: Hashable](
     nodes: Sequence[N],
     edges: Iterable[tuple[N, N]],
     progress: Mapping[N, SkillProgressInput],

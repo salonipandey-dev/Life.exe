@@ -7,9 +7,21 @@ from lifeexe.core.db import Connection, Row
 from lifeexe.repositories import build_update, escape_like
 
 UPDATABLE = (
-    "title", "description", "category", "priority", "difficulty", "status", "recurrence",
-    "estimated_minutes", "due_date", "completion_criteria", "skill_id", "updated_at",
-    "started_at", "completed_at", "archived_at",
+    "title",
+    "description",
+    "category",
+    "priority",
+    "difficulty",
+    "status",
+    "recurrence",
+    "estimated_minutes",
+    "due_date",
+    "completion_criteria",
+    "skill_id",
+    "updated_at",
+    "started_at",
+    "completed_at",
+    "archived_at",
 )
 
 #: Whitelisted sort keys -> ORDER BY fragments (never interpolate user input).
@@ -80,9 +92,7 @@ def delete(conn: Connection, user_id: int, quest_id: int) -> None:
     conn.execute("DELETE FROM quests WHERE id = ? AND user_id = ?", (quest_id, user_id))
 
 
-def list_quests(
-    conn: Connection, user_id: int, f: QuestFilters, day_key: str, week_key: str
-) -> tuple[list[Row], int]:
+def list_quests(conn: Connection, user_id: int, f: QuestFilters, day_key: str, week_key: str) -> tuple[list[Row], int]:
     where = ["q.user_id = :user_id"]
     params: dict[str, Any] = {"user_id": user_id, "day_key": day_key, "week_key": week_key}
     if f.statuses:
@@ -98,9 +108,7 @@ def list_quests(
         where.append("q.difficulty = :difficulty")
         params["difficulty"] = f.difficulty
     if f.search:
-        where.append(
-            "(q.title LIKE :search ESCAPE '\\' OR q.description LIKE :search ESCAPE '\\')"
-        )
+        where.append("(q.title LIKE :search ESCAPE '\\' OR q.description LIKE :search ESCAPE '\\')")
         params["search"] = f"%{escape_like(f.search)}%"
     if not f.include_archived:
         where.append("q.archived_at IS NULL")
@@ -133,6 +141,7 @@ def today_candidates(conn: Connection, user_id: int, today: str, day_key: str, w
 
 
 # --- completions ----------------------------------------------------------------
+
 
 def live_completion(conn: Connection, user_id: int, quest_id: int, occurrence_key: str) -> Row | None:
     row: Row | None = conn.execute(

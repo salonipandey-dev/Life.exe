@@ -14,10 +14,10 @@ Principles
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from enum import StrEnum
-from typing import Iterator
 
 
 class ScheduleKind(StrEnum):
@@ -66,9 +66,7 @@ class Schedule:
     target_per_week: int | None = None
 
     def __post_init__(self) -> None:
-        if self.kind is ScheduleKind.WEEKLY_COUNT and not (
-            self.target_per_week and 1 <= self.target_per_week <= 7
-        ):
+        if self.kind is ScheduleKind.WEEKLY_COUNT and not (self.target_per_week and 1 <= self.target_per_week <= 7):
             raise ValueError("WEEKLY_COUNT habits need target_per_week in 1..7")
         if not self.weekdays:
             raise ValueError("at least one weekday is required")

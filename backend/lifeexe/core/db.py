@@ -11,9 +11,10 @@ row at the start of the transaction (documented in docs/04-database-design.md).
 from __future__ import annotations
 
 import sqlite3
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 from lifeexe.core.migrations import apply_migrations
 
@@ -69,4 +70,4 @@ def is_unique_violation(exc: BaseException) -> bool:
 
 
 def row_to_dict(row: sqlite3.Row | None) -> dict[str, Any] | None:
-    return None if row is None else {k: row[k] for k in row.keys()}
+    return None if row is None else {k: row[k] for k in row.keys()}  # noqa: SIM118 (sqlite3.Row is not a dict)

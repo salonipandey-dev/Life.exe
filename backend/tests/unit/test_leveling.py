@@ -38,9 +38,11 @@ def test_boundaries_exact(level: int) -> None:
 
 def test_strictly_increasing_and_gaps_grow() -> None:
     values = [xp_required_for_level(L) for L in range(1, 500)]
-    gaps = [b - a for a, b in zip(values, values[1:])]
+    gaps = [b - a for a, b in zip(values, values[1:], strict=False)]
     assert all(g > 0 for g in gaps)
-    assert all(b >= a for a, b in zip(gaps, gaps[1:])), "each level should cost at least as much as the last"
+    assert all(b >= a for a, b in zip(gaps, gaps[1:], strict=False)), (
+        "each level should cost at least as much as the last"
+    )
 
 
 @pytest.mark.parametrize("level", list(range(1, 2000, 7)))

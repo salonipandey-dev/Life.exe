@@ -36,7 +36,9 @@ def _schedule(h: Row) -> Schedule:
     )
 
 
-def load_histories(conn: Connection, user_id: int, habits: list[Row], today: date) -> dict[int, tuple[HabitHistory, dict[str, Row]]]:
+def load_histories(
+    conn: Connection, user_id: int, habits: list[Row], today: date
+) -> dict[int, tuple[HabitHistory, dict[str, Row]]]:
     ids = [int(h["id"]) for h in habits]
     logs_by: dict[int, list[Row]] = defaultdict(list)
     for log in habits_repo.logs_for_habits(conn, user_id, ids):
@@ -50,11 +52,17 @@ def load_histories(conn: Connection, user_id: int, habits: list[Row], today: dat
         hid = int(h["id"])
         target = int(h["target_value"])
         logs = logs_by[hid]
-        done = frozenset(date.fromisoformat(l["local_date"]) for l in logs
-                         if l["entry_type"] == "ENTRY" and int(l["value"]) >= target)
-        partial = frozenset(date.fromisoformat(l["local_date"]) for l in logs
-                            if l["entry_type"] == "ENTRY" and 0 < int(l["value"]) < target)
-        rest = frozenset(date.fromisoformat(l["local_date"]) for l in logs if l["entry_type"] == "REST")
+        done = frozenset(
+            date.fromisoformat(entry["local_date"])
+            for entry in logs
+            if entry["entry_type"] == "ENTRY" and int(entry["value"]) >= target
+        )
+        partial = frozenset(
+            date.fromisoformat(entry["local_date"])
+            for entry in logs
+            if entry["entry_type"] == "ENTRY" and 0 < int(entry["value"]) < target
+        )
+        rest = frozenset(date.fromisoformat(entry["local_date"]) for entry in logs if entry["entry_type"] == "REST")
         history = HabitHistory(
             schedule=_schedule(h),
             start=date.fromisoformat(h["start_date"]),
@@ -64,19 +72,24 @@ def load_histories(conn: Connection, user_id: int, habits: list[Row], today: dat
             rest=rest,
             paused=paused_days(pauses_by[hid], today),
         )
-        out[hid] = (history, {l["local_date"]: l for l in logs})
+        out[hid] = (history, {entry["local_date"]: entry for entry in logs})
     return out
 
 
 def best_daily_streak(conn: Connection, user_id: int, today: date) -> int:
-    habits = [h for h in habits_repo.list_habits(conn, user_id, include_archived=True)
-              if h["schedule_kind"] != ScheduleKind.WEEKLY_COUNT.value]
+    habits = [
+        h
+        for h in habits_repo.list_habits(conn, user_id, include_archived=True)
+        if h["schedule_kind"] != ScheduleKind.WEEKLY_COUNT.value
+    ]
     if not habits:
         return 0
     return max(habit_stats(hist).longest_streak for hist, _ in load_histories(conn, user_id, habits, today).values())
 
 
-def habit_dict(h: Row, history: HabitHistory, logs: dict[str, Row], ud: UserDay, calendar_days: int = 28) -> dict[str, Any]:
+def habit_dict(
+    h: Row, history: HabitHistory, logs: dict[str, Row], ud: UserDay, calendar_days: int = 28
+) -> dict[str, Any]:
     stats = habit_stats(history)
     today_log = logs.get(ud.today_iso)
     paused = ud.today in history.paused
@@ -106,14 +119,21 @@ def habit_dict(h: Row, history: HabitHistory, logs: dict[str, Row], ud: UserDay,
             "total_done": stats.total_done,
             "week_progress": list(stats.week_progress) if stats.week_progress else None,
             "windows": [
-                {"label": w.label, "achieved": w.achieved, "required": w.required,
-                 "rate": None if w.rate is None else round(w.rate, 4)}
+                {
+                    "label": w.label,
+                    "achieved": w.achieved,
+                    "required": w.required,
+                    "rate": None if w.rate is None else round(w.rate, 4),
+                }
                 for w in stats.windows
             ],
         },
         "calendar": [
-            {"date": d.isoformat(), "state": s.value,
-             "value": int(logs[d.isoformat()]["value"]) if d.isoformat() in logs else 0}
+            {
+                "date": d.isoformat(),
+                "state": s.value,
+                "value": int(logs[d.isoformat()]["value"]) if d.isoformat() in logs else 0,
+            }
             for d, s in calendar(history, calendar_days)
         ],
     }
@@ -193,8 +213,9 @@ class HabitService:
             habits_repo.end_pause(conn, user_id, int(pause["id"]), end)
             return self._one(conn, ud, habit_id)
 
-    def log(self, user_id: int, habit_id: int, day: date | None, entry_type: str, value: int | None,
-            note: str) -> dict[str, Any]:
+    def log(
+        self, user_id: int, habit_id: int, day: date | None, entry_type: str, value: int | None, note: str
+    ) -> dict[str, Any]:
         with self.db.transaction() as conn:
             ud = user_day(conn, user_id, self.clock.now())
             h = habits_repo.get(conn, user_id, habit_id)
@@ -213,7 +234,9 @@ class HabitService:
                 raise BadRequest("Yes/no habits take a value of 0 or 1.")
             existing = habits_repo.get_log(conn, user_id, habit_id, day.isoformat())
             if existing is None:
-                log_id = habits_repo.insert_log(conn, user_id, habit_id, day.isoformat(), entry_type, value, note, ud.now_iso)
+                log_id = habits_repo.insert_log(
+                    conn, user_id, habit_id, day.isoformat(), entry_type, value, note, ud.now_iso
+                )
                 award_event_id = None
             else:
                 log_id = int(existing["id"])
@@ -255,22 +278,31 @@ class HabitService:
         if day < ud.today - timedelta(days=BACKFILL_DAYS):
             raise BadRequest(f"Entries can only be changed for the last {BACKFILL_DAYS} days.")
 
-    def _sync_award(self, conn: Connection, ud: UserDay, h: Row, log_id: int, award_event_id: int | None,
-                    done: bool, day: date) -> int:
+    def _sync_award(
+        self, conn: Connection, ud: UserDay, h: Row, log_id: int, award_event_id: int | None, done: bool, day: date
+    ) -> int:
         """Keep the ledger consistent with the entry: exactly one live award
         while the day is done, none otherwise. Returns the XP delta."""
         user_id = ud.user_id
         if done and award_event_id is None:
             seq = ledger.count_awards_for_source(conn, user_id, "HABIT_LOG", log_id)
-            reward = capped_reward(self.game.habit_checkin_xp, ledger.net_xp_on(conn, user_id, day.isoformat()), self.game)
+            reward = capped_reward(
+                self.game.habit_checkin_xp, ledger.net_xp_on(conn, user_id, day.isoformat()), self.game
+            )
             event_id = ledger.insert_xp_event(
                 conn,
                 NewXpEvent(
-                    user_id=user_id, amount=reward.xp, base_amount=reward.base_xp,
-                    reason="HABIT_COMPLETED", source_type="HABIT_LOG", source_id=log_id,
-                    skill_id=None, attribute=h["attribute"],
+                    user_id=user_id,
+                    amount=reward.xp,
+                    base_amount=reward.base_xp,
+                    reason="HABIT_COMPLETED",
+                    source_type="HABIT_LOG",
+                    source_id=log_id,
+                    skill_id=None,
+                    attribute=h["attribute"],
                     idempotency_key=f"habit_log:{log_id}:award:{seq}",
-                    local_date=day.isoformat(), created_at=ud.now_iso,
+                    local_date=day.isoformat(),
+                    created_at=ud.now_iso,
                 ),
             )
             habits_repo.set_award(conn, user_id, log_id, event_id)
@@ -281,11 +313,18 @@ class HabitService:
             ledger.insert_xp_event(
                 conn,
                 NewXpEvent(
-                    user_id=user_id, amount=-int(award["amount"]), base_amount=0,
-                    reason="HABIT_UNDONE", source_type="HABIT_LOG", source_id=log_id,
-                    skill_id=None, attribute=award["attribute"],
-                    idempotency_key=f"reversal:{award['id']}", local_date=award["local_date"],
-                    created_at=ud.now_iso, reverses_event_id=int(award["id"]),
+                    user_id=user_id,
+                    amount=-int(award["amount"]),
+                    base_amount=0,
+                    reason="HABIT_UNDONE",
+                    source_type="HABIT_LOG",
+                    source_id=log_id,
+                    skill_id=None,
+                    attribute=award["attribute"],
+                    idempotency_key=f"reversal:{award['id']}",
+                    local_date=award["local_date"],
+                    created_at=ud.now_iso,
+                    reverses_event_id=int(award["id"]),
                 ),
             )
             habits_repo.set_award(conn, user_id, log_id, None)

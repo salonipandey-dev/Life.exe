@@ -55,16 +55,12 @@ def apply_migrations(conn: sqlite3.Connection, dialect: str = "sqlite") -> list[
                applied_at TEXT NOT NULL
            )"""
     )
-    applied = {
-        r[0]: r[1] for r in conn.execute("SELECT version, checksum FROM schema_migrations")
-    }
+    applied = {r[0]: r[1] for r in conn.execute("SELECT version, checksum FROM schema_migrations")}
     newly_applied: list[str] = []
     for m in load_migrations(dialect):
         if m.version in applied:
             if applied[m.version] != m.checksum:
-                raise MigrationError(
-                    f"migration {m.version}_{m.name} changed after being applied"
-                )
+                raise MigrationError(f"migration {m.version}_{m.name} changed after being applied")
             continue
         now = datetime.now(UTC).isoformat(timespec="microseconds")
         try:
@@ -72,8 +68,7 @@ def apply_migrations(conn: sqlite3.Connection, dialect: str = "sqlite") -> list[
             for statement in _split_statements(m.sql):
                 conn.execute(statement)
             conn.execute(
-                "INSERT INTO schema_migrations (version, name, checksum, applied_at) "
-                "VALUES (?, ?, ?, ?)",
+                "INSERT INTO schema_migrations (version, name, checksum, applied_at) VALUES (?, ?, ?, ?)",
                 (m.version, m.name, m.checksum, now),
             )
             conn.execute("COMMIT")
@@ -95,13 +90,9 @@ def _split_statements(sql: str) -> list[str]:
         buffer += line
         if sqlite3.complete_statement(buffer):
             stmt = buffer.strip()
-            if stmt and not all(
-                ln.strip().startswith("--") or not ln.strip() for ln in stmt.splitlines()
-            ):
+            if stmt and not all(ln.strip().startswith("--") or not ln.strip() for ln in stmt.splitlines()):
                 statements.append(stmt)
             buffer = ""
-    if buffer.strip() and not all(
-        ln.strip().startswith("--") or not ln.strip() for ln in buffer.splitlines()
-    ):
+    if buffer.strip() and not all(ln.strip().startswith("--") or not ln.strip() for ln in buffer.splitlines()):
         raise MigrationError("migration ends with an incomplete statement")
     return statements

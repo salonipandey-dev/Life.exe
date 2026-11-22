@@ -18,9 +18,7 @@ def insert(conn: Connection, user_id: int, fields: dict[str, Any]) -> int:
 
 
 def get(conn: Connection, user_id: int, skill_id: int) -> Row | None:
-    row: Row | None = conn.execute(
-        "SELECT * FROM skills WHERE user_id = ? AND id = ?", (user_id, skill_id)
-    ).fetchone()
+    row: Row | None = conn.execute("SELECT * FROM skills WHERE user_id = ? AND id = ?", (user_id, skill_id)).fetchone()
     return row
 
 
@@ -69,8 +67,9 @@ def evidence_for_skill(conn: Connection, user_id: int, skill_id: int) -> list[Ro
     ).fetchall()
 
 
-def insert_evidence(conn: Connection, user_id: int, skill_id: int, title: str, url: str | None,
-                    notes: str, now: str) -> int:
+def insert_evidence(
+    conn: Connection, user_id: int, skill_id: int, title: str, url: str | None, notes: str, now: str
+) -> int:
     cur = conn.execute(
         """INSERT INTO skill_evidence (user_id, skill_id, title, url, notes, created_at)
            VALUES (?, ?, ?, ?, ?, ?)""",

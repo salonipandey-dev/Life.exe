@@ -6,9 +6,9 @@ show exactly why it was produced. No insight is generated without data.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import date, timedelta
-from typing import Mapping
 
 #: Minimum number of countable quests in *each* compared week before a
 #: completion-rate comparison is reported. Avoids "0% -> 100%" noise.

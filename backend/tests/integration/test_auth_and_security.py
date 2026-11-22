@@ -3,13 +3,15 @@ from __future__ import annotations
 from starlette.testclient import TestClient
 
 from lifeexe.core.timeutil import FixedClock
-from tests.helpers import CSRF, PASSWORD, new_client, register
+from tests.helpers import CSRF, PASSWORD, new_client
 
 
 def test_register_sets_secure_session_cookie(app) -> None:  # type: ignore[no-untyped-def]
     c = new_client(app)
-    r = c.post("/api/v1/auth/register", json={"email": "New@Example.com ", "password": PASSWORD,
-                                              "display_name": "Saloni", "timezone": "Asia/Kolkata"})
+    r = c.post(
+        "/api/v1/auth/register",
+        json={"email": "New@Example.com ", "password": PASSWORD, "display_name": "Saloni", "timezone": "Asia/Kolkata"},
+    )
     assert r.status_code == 201
     cookie = r.headers["set-cookie"].lower()
     assert "lifeexe_session=" in cookie and "httponly" in cookie and "samesite=lax" in cookie
@@ -20,15 +22,18 @@ def test_register_sets_secure_session_cookie(app) -> None:  # type: ignore[no-un
 
 def test_register_accepts_legacy_browser_timezone(app) -> None:  # type: ignore[no-untyped-def]
     c = new_client(app)
-    r = c.post("/api/v1/auth/register", json={"email": "tz@example.com", "password": PASSWORD,
-                                              "display_name": "T", "timezone": "Asia/Calcutta"})
+    r = c.post(
+        "/api/v1/auth/register",
+        json={"email": "tz@example.com", "password": PASSWORD, "display_name": "T", "timezone": "Asia/Calcutta"},
+    )
     assert r.status_code == 201
     assert c.get("/api/v1/profile").json()["timezone"] == "Asia/Kolkata"
 
 
 def test_duplicate_email_conflict(client: TestClient, app) -> None:  # type: ignore[no-untyped-def]
-    r = new_client(app).post("/api/v1/auth/register", json={"email": "SALONI@example.com", "password": PASSWORD,
-                                                             "display_name": "x"})
+    r = new_client(app).post(
+        "/api/v1/auth/register", json={"email": "SALONI@example.com", "password": PASSWORD, "display_name": "x"}
+    )
     assert r.status_code == 409
 
 
@@ -71,8 +76,15 @@ def test_session_expiry(client: TestClient, clock: FixedClock) -> None:
 
 def test_unauthenticated_access_denied(app) -> None:  # type: ignore[no-untyped-def]
     c = new_client(app)
-    for path in ["/api/v1/quests", "/api/v1/dashboard", "/api/v1/profile", "/api/v1/habits",
-                 "/api/v1/skills", "/api/v1/analytics/summary", "/api/v1/account/export"]:
+    for path in [
+        "/api/v1/quests",
+        "/api/v1/dashboard",
+        "/api/v1/profile",
+        "/api/v1/habits",
+        "/api/v1/skills",
+        "/api/v1/analytics/summary",
+        "/api/v1/account/export",
+    ]:
         assert c.get(path).status_code == 401, path
     forged = TestClient(app, headers=CSRF, cookies={"lifeexe_session": "forged-token"})
     assert forged.get("/api/v1/quests").status_code == 401
@@ -81,8 +93,9 @@ def test_unauthenticated_access_denied(app) -> None:  # type: ignore[no-untyped-
 def test_login_rate_limited(make_app) -> None:  # type: ignore[no-untyped-def]
     app = make_app(auth_rate_limit_per_minute=3)
     c = new_client(app)
-    codes = [c.post("/api/v1/auth/login", json={"email": "x@y.co", "password": "whatever-123"}).status_code
-             for _ in range(5)]
+    codes = [
+        c.post("/api/v1/auth/login", json={"email": "x@y.co", "password": "whatever-123"}).status_code for _ in range(5)
+    ]
     assert codes[:3] == [401, 401, 401] and codes[3:] == [429, 429]
     r = c.post("/api/v1/auth/login", json={"email": "x@y.co", "password": "whatever-123"})
     assert int(r.headers["retry-after"]) > 0

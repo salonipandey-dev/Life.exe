@@ -7,7 +7,8 @@ second, database-level guarantee that rows cannot be linked across users.
 
 from __future__ import annotations
 
-from typing import Any, Iterable, Mapping
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 
 def build_update(table: str, allowed: Iterable[str], fields: Mapping[str, Any]) -> tuple[str, list[Any]]:
