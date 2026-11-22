@@ -1,0 +1,6 @@
+# Runtime dependencies — versions are the ones the test suite was executed with.
+starlette==1.7.0
+uvicorn==0.54.0
+pydantic==2.13.5
+python-multipart==0.0.32
+tzdata>=2024.1 ; sys_platform == "win32"

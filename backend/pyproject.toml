@@ -1,0 +1,35 @@
+[project]
+name = "lifeexe"
+version = "0.1.0"
+description = "LIFE.EXE — gamified personal operating system (backend)"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra --strict-markers"
+markers = [
+    "postgres: needs local PostgreSQL 16 binaries (skipped if absent)",
+    "e2e: browser end-to-end tests (needs Playwright + Chromium and a built frontend)",
+    "perf: performance measurements (slower)",
+]
+filterwarnings = ["error::pytest.PytestUnraisableExceptionWarning"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+warn_unused_ignores = true
+disallow_any_generics = false
+packages = ["lifeexe"]
+
+[[tool.mypy.overrides]]
+module = ["uvicorn"]
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S", "SIM"]
+ignore = ["S101"]
