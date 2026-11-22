@@ -25,7 +25,7 @@
   --lx-accent: #087F5B;      /* Primary Emerald */
   --lx-accent-deep: #064E3B; /* Deep Emerald */
   --lx-accent-ink: #5FD3A7;  /* emerald for text on dark */
-  --lx-on-accent: #F3EEE4;
+  --lx-on-accent: #FFFFFF;  /* 5.0:1 on Primary Emerald (ivory text was 4.3:1) */
   --lx-gold: #D6B46A;        /* Champagne Gold */
   --lx-gold-ink: #D6B46A;
   --lx-gold-track: rgb(214 180 106 / 0.16);
@@ -51,7 +51,7 @@
   --lx-accent: #087F5B;
   --lx-accent-deep: #064E3B;
   --lx-accent-ink: #066A4C;
-  --lx-on-accent: #FBF8F2;
+  --lx-on-accent: #FFFFFF;
   --lx-gold: #C29A45;
   --lx-gold-ink: #7E6122;
   --lx-gold-track: rgb(194 154 69 / 0.20);

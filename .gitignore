@@ -26,3 +26,4 @@ test-results/
 .DS_Store
 .idea/
 .vscode/
+backend/tests/perf/results.json
