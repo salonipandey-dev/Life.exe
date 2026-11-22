@@ -1,0 +1,10 @@
+{
+  "//": "Used where @types/react cannot be installed (the verification environment). Adds a minimal React type shim; DOM-prop typing on JSX elements is therefore looser than with tsconfig.json.",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "typeRoots": ["/opt/npm-tools/node_modules/@types", "./node_modules/@types"]
+  },
+  "include": ["src", "tests", "src/types/react-shim.d.ts"],
+  "exclude": []
+}

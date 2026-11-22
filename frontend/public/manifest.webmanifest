@@ -1,0 +1,10 @@
+{
+  "name": "LIFE.EXE",
+  "short_name": "LIFE.EXE",
+  "description": "Level up your reality.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B0F0E",
+  "theme_color": "#0B0F0E",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

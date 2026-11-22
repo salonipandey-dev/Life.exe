@@ -1,0 +1,144 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Design tokens. Two themes share one semantic vocabulary:
+   - gold means *earned* (XP, levels, coins, achievements) and nothing else
+   - emerald means *action and progress state*
+   Components reference semantic tokens only; no raw hex values in TSX.
+--------------------------------------------------------------------------- */
+
+@font-face { font-family: "Cardo"; src: url("/fonts/cardo-regular.woff") format("woff"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Cardo"; src: url("/fonts/cardo-italic.woff") format("woff"); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: "Cardo"; src: url("/fonts/cardo-bold.woff") format("woff"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "DM Sans"; src: url("/fonts/dmsans-variable.woff") format("woff"); font-weight: 100 1000; font-display: swap; }
+
+:root {
+  --lx-bg: #0B0F0E;          /* Obsidian */
+  --lx-surface: #181F1C;     /* Warm Surface */
+  --lx-raised: #1F2824;
+  --lx-coffee: #241B18;      /* Dark Coffee: reward surfaces */
+  --lx-line: rgb(243 238 228 / 0.09);
+  --lx-line-strong: rgb(243 238 228 / 0.18);
+  --lx-ink: #F3EEE4;         /* Soft Ivory */
+  --lx-ink-2: #C4BFB4;
+  --lx-ink-3: #959189;
+  --lx-accent: #087F5B;      /* Primary Emerald */
+  --lx-accent-deep: #064E3B; /* Deep Emerald */
+  --lx-accent-ink: #5FD3A7;  /* emerald for text on dark */
+  --lx-on-accent: #F3EEE4;
+  --lx-gold: #D6B46A;        /* Champagne Gold */
+  --lx-gold-ink: #D6B46A;
+  --lx-gold-track: rgb(214 180 106 / 0.16);
+  --lx-danger: #E8907E;
+  --lx-heat-0: rgb(243 238 228 / 0.06);
+  --lx-heat-1: #1F6650;
+  --lx-heat-2: #16936A;
+  --lx-heat-3: #3DBF91;
+  --lx-heat-4: #8BE3C0;
+  color-scheme: dark;
+}
+
+[data-theme="ivory"] {
+  --lx-bg: #F3EEE4;
+  --lx-surface: #FBF8F2;
+  --lx-raised: #EFE9DD;
+  --lx-coffee: #F1E6D2;
+  --lx-line: rgb(27 33 30 / 0.10);
+  --lx-line-strong: rgb(27 33 30 / 0.22);
+  --lx-ink: #18201C;
+  --lx-ink-2: #3F4843;
+  --lx-ink-3: #5E6661;
+  --lx-accent: #087F5B;
+  --lx-accent-deep: #064E3B;
+  --lx-accent-ink: #066A4C;
+  --lx-on-accent: #FBF8F2;
+  --lx-gold: #C29A45;
+  --lx-gold-ink: #7E6122;
+  --lx-gold-track: rgb(194 154 69 / 0.20);
+  --lx-danger: #A63A26;
+  --lx-heat-0: rgb(27 33 30 / 0.07);
+  --lx-heat-1: #A6DCC6;
+  --lx-heat-2: #5DBB95;
+  --lx-heat-3: #16936A;
+  --lx-heat-4: #064E3B;
+  color-scheme: light;
+}
+
+@theme {
+  --color-bg: var(--lx-bg);
+  --color-surface: var(--lx-surface);
+  --color-raised: var(--lx-raised);
+  --color-coffee: var(--lx-coffee);
+  --color-line: var(--lx-line);
+  --color-line-strong: var(--lx-line-strong);
+  --color-ink: var(--lx-ink);
+  --color-ink-2: var(--lx-ink-2);
+  --color-ink-3: var(--lx-ink-3);
+  --color-accent: var(--lx-accent);
+  --color-accent-deep: var(--lx-accent-deep);
+  --color-accent-ink: var(--lx-accent-ink);
+  --color-on-accent: var(--lx-on-accent);
+  --color-gold: var(--lx-gold);
+  --color-gold-ink: var(--lx-gold-ink);
+  --color-danger: var(--lx-danger);
+  --font-display: "Cardo", "Iowan Old Style", Georgia, serif;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --radius-panel: 18px;
+  --radius-control: 10px;
+}
+
+@layer base {
+  html { background: var(--lx-bg); color: var(--lx-ink); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+  body { margin: 0; min-height: 100vh; font-size: 15px; line-height: 1.55; font-variant-numeric: tabular-nums; }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 400; letter-spacing: -0.01em; margin: 0; }
+  h1 { font-size: 2.25rem; line-height: 1.1; }
+  h2 { font-size: 1.5rem; line-height: 1.2; }
+  h3 { font-size: 1.125rem; line-height: 1.3; }
+  p { margin: 0; }
+  :focus-visible { outline: 2px solid var(--lx-accent-ink); outline-offset: 2px; border-radius: 6px; }
+  ::selection { background: var(--lx-accent-deep); color: var(--lx-ink); }
+}
+
+@layer components {
+  .panel { background: var(--lx-surface); border: 1px solid var(--lx-line); border-radius: var(--radius-panel); }
+  .panel-reward { background: var(--lx-coffee); border: 1px solid rgb(214 180 106 / 0.18); border-radius: var(--radius-panel); }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; min-height: 2.25rem;
+         padding: 0 0.95rem; border-radius: var(--radius-control); font-weight: 560; font-size: 0.875rem;
+         border: 1px solid transparent; cursor: pointer; transition: background-color 120ms, border-color 120ms; white-space: nowrap; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary { background: var(--lx-accent); color: var(--lx-on-accent); }
+  .btn-primary:hover:not(:disabled) { background: var(--lx-accent-deep); }
+  .btn-quiet { background: transparent; color: var(--lx-ink); border-color: var(--lx-line-strong); }
+  .btn-quiet:hover:not(:disabled) { background: var(--lx-raised); }
+  .btn-ghost { background: transparent; color: var(--lx-ink-2); padding: 0 0.6rem; }
+  .btn-ghost:hover:not(:disabled) { color: var(--lx-ink); background: var(--lx-raised); }
+  .btn-danger { background: transparent; color: var(--lx-danger); border-color: var(--lx-danger); }
+
+  .field { display: grid; gap: 0.35rem; font-size: 0.875rem; color: var(--lx-ink-2); }
+  .input { width: 100%; min-height: 2.5rem; padding: 0.5rem 0.75rem; border-radius: var(--radius-control);
+           background: var(--lx-bg); color: var(--lx-ink); border: 1px solid var(--lx-line-strong); font: inherit; font-size: 0.9375rem; }
+  .input:focus { outline: 2px solid var(--lx-accent-ink); outline-offset: 0; border-color: transparent; }
+  .input[aria-invalid="true"] { border-color: var(--lx-danger); }
+  textarea.input { min-height: 5rem; resize: vertical; }
+
+  .chip { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.1rem 0.55rem; border-radius: 999px;
+          font-size: 0.75rem; color: var(--lx-ink-2); background: var(--lx-raised); }
+  .chip-active { background: var(--lx-accent-deep); color: var(--lx-ink); }
+  .chip-warn { color: var(--lx-danger); background: transparent; border: 1px solid currentColor; }
+
+  .xp { color: var(--lx-gold-ink); font-weight: 600; }
+  .row { border-top: 1px solid var(--lx-line); }
+  .row:first-child { border-top: 0; }
+
+  .sigil-arc { transition: stroke-dashoffset 900ms cubic-bezier(.2,.8,.2,1); }
+  .toast-in { animation: toast-in 220ms ease-out; }
+  .skeleton { background: linear-gradient(90deg, var(--lx-raised), var(--lx-surface), var(--lx-raised)); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; border-radius: 8px; }
+}
+
+@keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+}

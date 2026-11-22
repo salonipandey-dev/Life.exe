@@ -7,7 +7,7 @@ __pycache__/
 *.egg-info/
 
 # Node / frontend build
-node_modules/
+node_modules
 frontend/dist/
 
 # Local data and secrets
