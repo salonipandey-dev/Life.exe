@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.venv/
+*.egg-info/
+
+# Node / frontend build
+node_modules/
+frontend/dist/
+
+# Local data and secrets
+*.db
+*.db-wal
+*.db-shm
+.env
+data/
+
+# Test artefacts
+backend/tests/e2e/artifacts/
+test-results/
+*.junit.xml
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
