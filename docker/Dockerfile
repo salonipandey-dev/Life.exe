@@ -19,6 +19,6 @@ COPY backend/ ./
 COPY --from=web /app/frontend/dist /app/frontend/dist
 USER lifeexe
 EXPOSE 8000
-VOLUME ["/data"]
+# Persistent storage is mounted at /data by Compose or the hosting platform.
 HEALTHCHECK --interval=30s --timeout=3s CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health')"
 CMD ["python", "-m", "lifeexe"]
