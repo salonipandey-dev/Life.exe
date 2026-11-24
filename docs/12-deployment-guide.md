@@ -21,7 +21,7 @@ All settings are environment variables; see `.env.example`. Production essential
 | `LIFEEXE_DB_PATH` | path on a persistent volume, e.g. `/data/lifeexe.db` |
 | `LIFEEXE_HOST` / `LIFEEXE_PORT` | `0.0.0.0` / platform port |
 | `LIFEEXE_FRONTEND_DIST` | built SPA path |
-| `LIFEEXE_ALLOWED_ORIGINS` | only if the UI is served from a different origin (not recommended) |
+| `LIFEEXE_ALLOWED_ORIGINS` | comma-separated public origins accepted for browser writes behind a proxy, e.g. `https://life.example` |
 
 Run **one** worker: the SQLite write lock and the in-process rate limiter assume a single process.
 
@@ -36,6 +36,20 @@ Options to compare at deployment time (check current pricing and free-tier limit
 ```bash
 docker compose up --build        # local production-like run on http://localhost:8000
 ```
+
+### Browser sign-in behind an HTTPS proxy
+
+Railway supplies the service hostname in `RAILWAY_PUBLIC_DOMAIN`. When
+`LIFEEXE_ALLOWED_ORIGINS` is empty, LIFE.EXE accepts the HTTPS origin for that
+hostname even when the final hop to the container uses HTTP.
+
+If sign-in returns HTTP 403 with “Cross-origin request rejected”, open the app
+and read `window.location.origin` in the browser console. Set
+`LIFEEXE_ALLOWED_ORIGINS` to that exact value in the service environment and
+redeploy. To serve both a custom domain and the Railway domain, list both
+origins separated by a comma. An explicit list replaces the Railway fallback.
+Use the scheme and host, plus the port if the browser includes one. Omit paths
+and trailing slashes. Verify by signing in and saving a quest through the UI.
 
 ## 4. Release steps
 1. `./scripts/verify.sh` green on the release commit.
