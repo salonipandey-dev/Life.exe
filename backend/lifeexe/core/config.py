@@ -37,6 +37,10 @@ class Settings:
         env = os.getenv("LIFEEXE_ENV", "development")
         defaults = cls()
         origins = os.getenv("LIFEEXE_ALLOWED_ORIGINS", "")
+        allowed_origins = tuple(o.strip() for o in origins.split(",") if o.strip())
+        railway_domain = os.getenv("RAILWAY_PUBLIC_DOMAIN", "").strip()
+        if not allowed_origins and railway_domain:
+            allowed_origins = (f"https://{railway_domain}",)
         return cls(
             env=env,
             db_path=os.getenv("LIFEEXE_DB_PATH", defaults.db_path),
@@ -46,5 +50,5 @@ class Settings:
             frontend_dist=os.getenv("LIFEEXE_FRONTEND_DIST", defaults.frontend_dist) or None,
             auth_rate_limit_per_minute=int(os.getenv("LIFEEXE_AUTH_RATE_LIMIT", defaults.auth_rate_limit_per_minute)),
             log_level=os.getenv("LIFEEXE_LOG_LEVEL", defaults.log_level),
-            allowed_origins=tuple(o.strip() for o in origins.split(",") if o.strip()),
+            allowed_origins=allowed_origins,
         )

@@ -6,6 +6,7 @@ from datetime import UTC, date, datetime
 import pytest
 
 from lifeexe.core import migrations
+from lifeexe.core.config import Settings
 from lifeexe.core.ratelimit import RateLimiter
 from lifeexe.core.security import hash_password, hash_token, needs_rehash, verify_password
 from lifeexe.core.timeutil import is_valid_timezone, local_date, normalize_timezone
@@ -18,6 +19,13 @@ from lifeexe.domain.analytics import (
     percent,
     top_attribute_insight,
 )
+
+
+def test_explicit_origins_override_railway_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("RAILWAY_PUBLIC_DOMAIN", "life-example.up.railway.app")
+    monkeypatch.setenv("LIFEEXE_ALLOWED_ORIGINS", "https://life.example, https://app.example")
+    assert Settings.from_env().allowed_origins == ("https://life.example", "https://app.example")
+
 
 # --- time -----------------------------------------------------------------------
 

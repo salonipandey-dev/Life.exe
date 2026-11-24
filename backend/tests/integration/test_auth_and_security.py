@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+from pathlib import Path
+
+import pytest
 from starlette.testclient import TestClient
 
 from lifeexe.core.timeutil import FixedClock
+from lifeexe.main import create_app
 from tests.helpers import CSRF, PASSWORD, new_client
 
 
@@ -111,6 +115,23 @@ def test_csrf_protections(client: TestClient, app) -> None:  # type: ignore[no-u
     assert same.post("/api/v1/quests", json={"title": "x"}).status_code == 201
     # GET requests stay usable without the header
     assert no_header.get("/api/v1/quests").status_code == 200
+
+
+def test_registration_behind_railway_proxy(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LIFEEXE_ENV", "production")
+    monkeypatch.setenv("LIFEEXE_DB_PATH", str(tmp_path / "railway.db"))
+    monkeypatch.setenv("RAILWAY_PUBLIC_DOMAIN", "life-example.up.railway.app")
+    monkeypatch.delenv("LIFEEXE_ALLOWED_ORIGINS", raising=False)
+    with TestClient(create_app(), base_url="http://internal:8000") as client:
+        path = "/api/v1/auth/register"
+        body = {"email": "new@example.com", "password": PASSWORD, "display_name": "New player"}
+        origin = "https://life-example.up.railway.app"
+        assert client.post(path, json=body, headers={"Origin": origin}).status_code == 403
+        other = {**CSRF, "Origin": "https://other.up.railway.app"}
+        assert client.post(path, json=body, headers=other).status_code == 403
+        response = client.post(path, json=body, headers={**CSRF, "Origin": origin})
+        assert response.status_code == 201, response.text
+        assert "secure" in response.headers["set-cookie"].lower()
 
 
 def test_content_type_size_and_json_validation(client: TestClient, app) -> None:  # type: ignore[no-untyped-def]
