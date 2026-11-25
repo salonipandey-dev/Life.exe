@@ -318,6 +318,17 @@ class HabitUpdateIn(In):
     target_value: int | None = Field(default=None, ge=1, le=1440)
     attribute: Attribute | None = None
 
+    @model_validator(mode="after")
+    def _consistent(self) -> HabitUpdateIn:
+        for name in ("name", "description", "schedule_kind", "weekdays", "measure", "target_value", "attribute"):
+            if name in self.model_fields_set and getattr(self, name) is None:
+                raise ValueError(f"{name} cannot be null")
+        if self.weekdays is not None and (
+            any(d < 0 or d > 6 for d in self.weekdays) or len(set(self.weekdays)) != len(self.weekdays)
+        ):
+            raise ValueError("weekdays must be distinct values 0 (Mon) .. 6 (Sun)")
+        return self
+
 
 class HabitLogIn(In):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True, populate_by_name=True)
