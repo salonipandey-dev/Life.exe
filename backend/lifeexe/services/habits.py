@@ -221,10 +221,8 @@ class HabitService:
             h = habits_repo.get(conn, user_id, habit_id)
             if h is None:
                 raise NotFound("Habit not found.")
-            if h["archived_at"] is not None:
-                raise Conflict("Archived habits cannot be logged.")
             day = day or ud.today
-            self._check_day(h, ud, day)
+            self._check_log_change(h, ud, day)
             target = int(h["target_value"])
             if entry_type == "REST":
                 value = 0
@@ -258,6 +256,7 @@ class HabitService:
             h = habits_repo.get(conn, user_id, habit_id)
             if h is None:
                 raise NotFound("Habit not found.")
+            self._check_log_change(h, ud, day)
             existing = habits_repo.get_log(conn, user_id, habit_id, day.isoformat())
             if existing is None:
                 raise NotFound("No entry for that day.")
@@ -270,7 +269,9 @@ class HabitService:
                 "achievements_unlocked": [],
             }
 
-    def _check_day(self, h: Row, ud: UserDay, day: date) -> None:
+    def _check_log_change(self, h: Row, ud: UserDay, day: date) -> None:
+        if h["archived_at"] is not None:
+            raise Conflict("Unarchive the habit before changing its entries.")
         if day > ud.today:
             raise BadRequest("You cannot log a future day.")
         if day < date.fromisoformat(h["start_date"]):

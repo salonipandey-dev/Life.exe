@@ -17,7 +17,8 @@
 - **New habit**: every day, on specific days, or a number of times per week; tracked as done/not done, a count, or minutes.
 - Tap the circle (or enter a value and **Log**) to record today. Each completed day earns 5 XP.
 - **Take a rest day** or **Pause** when you need to; neither breaks your streak. A missed day ends the current streak but never costs XP.
-- You can correct the last 30 days.
+- You can add, correct, or delete entries dated today or up to 30 days ago, counted by your configured local day. Entries cannot predate the habit or be in the future.
+- Unarchive a habit before changing its entries. Deleting a completed entry within the correction window reverses its XP once; rejected changes leave your entries and XP untouched.
 
 ## Skills
 - Each skill has two meters: **Practice XP** (from quests linked to the skill) and **Evidence** (things you made). A skill is **Demonstrated** only when both are met, and that unlocks the skills that build on it.
